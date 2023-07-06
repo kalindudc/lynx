@@ -1,0 +1,4 @@
+// 1.20.1	2023-07-06T00:55:28.157397	lynx/Model Definitions
+8bb741b5d9bb3b8b5ab37b74315771ace8e66223 assets/lynx/models/block/example_block.json
+cb631dd1fe8a4c639ef31001ba8639dcb480f59d assets/lynx/blockstates/example_block.json
+df8a7e24994aded12e73accd9a9f6c760c296db2 assets/lynx/models/item/example_block.json

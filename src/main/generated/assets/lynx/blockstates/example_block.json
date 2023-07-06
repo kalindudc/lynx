@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "lynx:block/example_block"
+    }
+  }
+}
