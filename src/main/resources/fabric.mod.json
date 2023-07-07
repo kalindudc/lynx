@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.kdecosta.lynx.ExampleMod"
+          "com.kdecosta.lynx.Lynx"
 		],
 		"client": [
-			"com.kdecosta.lynx.ExampleModClient"
+			"com.kdecosta.lynx.LynxClient"
 		],
 		"fabric-datagen": [
 			"com.kdecosta.lynx.data.LynxDataGenerator"

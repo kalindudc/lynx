@@ -1,12 +1,12 @@
 package com.kdecosta.lynx.data.provider;
 
-import com.kdecosta.lynx.ExampleMod;
+import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.block.Block;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -17,7 +17,10 @@ public class LynxBlockTagProvider extends FabricTagProvider.BlockTagProvider {
 
     @Override
     protected void configure(RegistryWrapper.WrapperLookup arg) {
-        getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).add(ExampleMod.EXAMPLE_BLOCK);
-        getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).add(ExampleMod.EXAMPLE_BLOCK);
+        for (String blockName: LynxBlockRegistry.MINEABLE_BLOCKS) {
+            Block block = LynxBlockRegistry.BLOCKS.get(blockName);
+            getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).add(block);
+            getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).add(block);
+        }
     }
 }

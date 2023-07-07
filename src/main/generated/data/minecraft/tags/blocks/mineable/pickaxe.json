@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "lynx:example_block"
+    "lynx:example_block",
+    "lynx:uranium_ore"
   ]
 }

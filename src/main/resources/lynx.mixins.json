@@ -3,7 +3,7 @@
 	"package": "com.kdecosta.lynx.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-		"ExampleMixin"
+		"LynxMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
