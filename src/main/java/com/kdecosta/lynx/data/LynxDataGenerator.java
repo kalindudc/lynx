@@ -1,9 +1,6 @@
 package com.kdecosta.lynx.data;
 
-import com.kdecosta.lynx.data.provider.LynxBlockLootTableProvider;
-import com.kdecosta.lynx.data.provider.LynxBlockTagProvider;
-import com.kdecosta.lynx.data.provider.LynxModelGeneratorProvider;
-import com.kdecosta.lynx.data.provider.LynxItemTagProvider;
+import com.kdecosta.lynx.data.provider.*;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 
@@ -15,5 +12,6 @@ public class LynxDataGenerator implements DataGeneratorEntrypoint {
         lynxPack.addProvider(LynxBlockTagProvider::new);
         lynxPack.addProvider(LynxBlockLootTableProvider::new);
         lynxPack.addProvider(LynxModelGeneratorProvider::new);
+        lynxPack.addProvider(LynxEnglishLanguageProvider::new);
     }
 }

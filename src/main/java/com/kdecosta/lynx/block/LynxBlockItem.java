@@ -7,12 +7,20 @@ import net.minecraft.util.Identifier;
 
 public class LynxBlockItem extends BlockItem implements ILynxResource {
 
-    public LynxBlockItem(Block block, Settings settings) {
+    private final String translation;
+
+    public LynxBlockItem(Block block, String translation, Settings settings) {
         super(block, settings);
+        this.translation = translation;
     }
 
     @Override
     public Identifier getId() {
         return ((LynxBlock) this.getBlock()).getId();
+    }
+
+    @Override
+    public String getTranslation() {
+        return translation;
     }
 }

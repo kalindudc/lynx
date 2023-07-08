@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -25,11 +26,13 @@ public class LynxBlockRegistry {
     public static final List<String> MINEABLE_BLOCKS = new ArrayList<>();
 
     // BLOCKS
-    public static final LynxBlock EXAMPLE_BLOCK  = createResource("example_block", FabricBlockSettings.create().strength(4.0f).requiresTool());
+    public static final LynxBlock EXAMPLE_BLOCK  = createResource("example_block", "Example Block", FabricBlockSettings.create().strength(4.0f).requiresTool());
     public static final LynxOreBlock URANIUM_ORE = createOreResource(
             "uranium_ore",
+            "Uranium Ore",
             FabricBlockSettings.create().strength(4.0f).requiresTool(),
-            -64, 0, 20);
+            -64, 0, 20, LynxItemRegistry.RAW_URANIUM);
+
     public static void registerAll() {
         for (Map.Entry<String, Block> blockEntry: BLOCKS.entrySet()) {
             Block block = blockEntry.getValue();
@@ -43,14 +46,14 @@ public class LynxBlockRegistry {
     }
 
     public static LynxBlockItem createBlockItem(LynxBlock block, FabricItemSettings settings) {
-        LynxBlockItem blockItem = new LynxBlockItem(block, settings);
+        LynxBlockItem blockItem = new LynxBlockItem(block, block.getTranslation(), settings);
         BLOCK_ITEMS.put(block.getId().getPath(), blockItem);
 
         return blockItem;
     }
 
-    public static LynxBlock createResource(String name, FabricBlockSettings settings) {
-        LynxBlock block = new LynxBlock(new Identifier(Lynx.MODID, name), settings);
+    public static LynxBlock createResource(String name, String translation, FabricBlockSettings settings) {
+        LynxBlock block = new LynxBlock(new Identifier(Lynx.MODID, name), translation, settings);
         createBlockItem(block, new FabricItemSettings());
 
         BLOCKS.put(name, block);
@@ -59,8 +62,9 @@ public class LynxBlockRegistry {
         return block;
     }
 
-    public static LynxOreBlock createOreResource(String name, FabricBlockSettings settings, int minY, int maxY, int veinSize) {
-        LynxOreBlock block = new LynxOreBlock(new Identifier(Lynx.MODID, name), settings, minY, maxY, veinSize);
+    public static LynxOreBlock createOreResource(String name, String translation, FabricBlockSettings settings,
+                                                 int minY, int maxY, int veinSize, Item lootDrop) {
+        LynxOreBlock block = new LynxOreBlock(new Identifier(Lynx.MODID, name), translation, settings, minY, maxY, veinSize, lootDrop);
         createBlockItem(block, new FabricItemSettings());
 
         BLOCKS.put(name, block);

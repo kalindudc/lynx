@@ -1,20 +1,21 @@
-package com.kdecosta.lynx.block;
+package com.kdecosta.lynx.item;
 
 import com.kdecosta.lynx.shared.ILynxResource;
-import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 
-public class LynxBlock extends Block implements ILynxResource {
+public class LynxItem extends Item implements ILynxResource {
 
     private final Identifier id;
     private final String translation;
 
-    public LynxBlock(Identifier id, String translation, Settings settings) {
+    public LynxItem(Identifier id, String translation, Settings settings) {
         super(settings);
         this.id = id;
         this.translation = translation;
     }
 
+    @Override
     public Identifier getId() {
         return id;
     }

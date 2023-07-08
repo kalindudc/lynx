@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "lynx:uranium_ore"
+          "name": "lynx:raw_uranium"
         }
       ],
       "rolls": 1.0

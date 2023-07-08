@@ -1,17 +1,22 @@
 package com.kdecosta.lynx.block;
 
+import com.kdecosta.lynx.shared.IHasLootDrop;
+import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 
-public class LynxOreBlock extends LynxBlock {
+public class LynxOreBlock extends LynxBlock implements IHasLootDrop {
 
     private final int minY;
     private final int maxY;
     private final int veinSize;
-    public LynxOreBlock(Identifier id, Settings settings, int minY, int maxY, int veinSize) {
-        super(id, settings);
+    private final Item lootDrop;
+
+    public LynxOreBlock(Identifier id, String translation, Settings settings, int minY, int maxY, int veinSize, Item lootDrop) {
+        super(id, translation, settings);
         this.minY = minY;
         this.maxY = maxY;
         this.veinSize = veinSize;
+        this.lootDrop = lootDrop;
     }
 
     /**
@@ -28,5 +33,10 @@ public class LynxOreBlock extends LynxBlock {
 
     public int getMinY() {
         return minY;
+    }
+
+    @Override
+    public Item getDrop() {
+        return lootDrop;
     }
 }

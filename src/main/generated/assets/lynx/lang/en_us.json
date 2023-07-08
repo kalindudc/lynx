@@ -1,0 +1,7 @@
+{
+  "block.lynx.example_block": "Example Block",
+  "block.lynx.uranium_ore": "Uranium Ore",
+  "item.lynx.raw_uranium": "Raw Uranium",
+  "item.lynx.uranium_ingot": "Uranium Ingot",
+  "lynx.item_group": "Lynx"
+}
