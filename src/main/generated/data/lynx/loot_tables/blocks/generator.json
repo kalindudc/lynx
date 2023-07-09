@@ -11,7 +11,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "lynx:example_block"
+          "name": "lynx:generator"
         }
       ],
       "rolls": 1.0

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "generating=false": {
+      "model": "lynx:block/generator"
+    },
+    "generating=true": {
+      "model": "lynx:block/generator_generating"
+    }
+  }
+}

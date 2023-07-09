@@ -1,6 +1,7 @@
 package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.block.Generator;
 import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.block.LynxBlockItem;
 import com.kdecosta.lynx.block.LynxOreBlock;
@@ -25,13 +26,19 @@ public class LynxBlockRegistry {
     // Tag maps
     public static final List<String> MINEABLE_BLOCKS = new ArrayList<>();
 
-    // BLOCKS
-    public static final LynxBlock EXAMPLE_BLOCK  = createResource("example_block", "Example Block", FabricBlockSettings.create().strength(4.0f).requiresTool());
+    // ORE
     public static final LynxOreBlock URANIUM_ORE = createOreResource(
             "uranium_ore",
             "Uranium Ore",
             FabricBlockSettings.create().strength(4.0f).requiresTool(),
             -64, 0, 20, LynxItemRegistry.RAW_URANIUM);
+
+    // Machines
+    public static final Generator GENERATOR = (Generator) createResource(
+            new Generator(
+                    new Identifier(Lynx.MODID, "generator"),
+                    "Generator",
+                    FabricBlockSettings.create().strength(4.0f).requiresTool()));
 
     public static void registerAll() {
         for (Map.Entry<String, Block> blockEntry: BLOCKS.entrySet()) {
@@ -45,6 +52,15 @@ public class LynxBlockRegistry {
         }
     }
 
+    public static LynxBlock createResource(LynxBlock block) {
+        createBlockItem(block, new FabricItemSettings());
+
+        BLOCKS.put(block.getId().getPath(), block);
+        MINEABLE_BLOCKS.add(block.getId().getPath());
+
+        return block;
+    }
+
     public static LynxBlockItem createBlockItem(LynxBlock block, FabricItemSettings settings) {
         LynxBlockItem blockItem = new LynxBlockItem(block, block.getTranslation(), settings);
         BLOCK_ITEMS.put(block.getId().getPath(), blockItem);
@@ -52,23 +68,9 @@ public class LynxBlockRegistry {
         return blockItem;
     }
 
-    public static LynxBlock createResource(String name, String translation, FabricBlockSettings settings) {
-        LynxBlock block = new LynxBlock(new Identifier(Lynx.MODID, name), translation, settings);
-        createBlockItem(block, new FabricItemSettings());
-
-        BLOCKS.put(name, block);
-        MINEABLE_BLOCKS.add(name);
-
-        return block;
-    }
-
-    public static LynxOreBlock createOreResource(String name, String translation, FabricBlockSettings settings,
-                                                 int minY, int maxY, int veinSize, Item lootDrop) {
+    public static LynxOreBlock createOreResource(String name, String translation, FabricBlockSettings settings, int minY, int maxY, int veinSize, Item lootDrop) {
         LynxOreBlock block = new LynxOreBlock(new Identifier(Lynx.MODID, name), translation, settings, minY, maxY, veinSize, lootDrop);
-        createBlockItem(block, new FabricItemSettings());
-
-        BLOCKS.put(name, block);
-        MINEABLE_BLOCKS.add(name);
+        createResource(block);
 
         return block;
     }

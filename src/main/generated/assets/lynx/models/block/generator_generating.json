@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "lynx:block/example_block"
+    "all": "lynx:block/generator_generating"
   }
 }
