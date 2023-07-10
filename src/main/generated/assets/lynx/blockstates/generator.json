@@ -1,10 +1,34 @@
 {
   "variants": {
-    "generating=false": {
+    "facing=east,generating=false": {
+      "model": "lynx:block/generator",
+      "y": 90
+    },
+    "facing=east,generating=true": {
+      "model": "lynx:block/generator_generating",
+      "y": 90
+    },
+    "facing=north,generating=false": {
       "model": "lynx:block/generator"
     },
-    "generating=true": {
+    "facing=north,generating=true": {
       "model": "lynx:block/generator_generating"
+    },
+    "facing=south,generating=false": {
+      "model": "lynx:block/generator",
+      "y": 180
+    },
+    "facing=south,generating=true": {
+      "model": "lynx:block/generator_generating",
+      "y": 180
+    },
+    "facing=west,generating=false": {
+      "model": "lynx:block/generator",
+      "y": 270
+    },
+    "facing=west,generating=true": {
+      "model": "lynx:block/generator_generating",
+      "y": 270
     }
   }
 }

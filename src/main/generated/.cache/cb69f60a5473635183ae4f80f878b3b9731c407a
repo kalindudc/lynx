@@ -1,10 +1,10 @@
-// 1.20.1	2023-07-09T01:01:17.130041	lynx/Model Definitions
+// 1.20.1	2023-07-09T22:36:26.86103	lynx/Model Definitions
 0c6cd0b3250ea5f14ed4c968795267e39e965047 assets/lynx/models/block/uranium_ore.json
 dea17f166f45dd91a0f394b0f57d6289c6d79b07 assets/lynx/blockstates/uranium_ore.json
-22a14dc15db97350400c20df087d70698dbf7f9c assets/lynx/models/block/generator_generating.json
+2ab48010d139f62177c59024e32027692c5a8790 assets/lynx/models/block/generator_generating.json
 fa07b3e505e2bb84a63187b32b4133fcc44ba9f1 assets/lynx/models/item/uranium_ore.json
 d87f5fb395bc04e8db83223897861a3e3cacf3b1 assets/lynx/models/item/uranium_ingot.json
-b00f25cde7b972b1ef6f25372f015309873c029c assets/lynx/blockstates/generator.json
+be796fee34d9a8317533c41c3461cf601df33465 assets/lynx/blockstates/generator.json
 18cfa0e997f52e0166d7397732e4bd1df603e01f assets/lynx/models/item/raw_uranium.json
-bb9b9a289d880fa82e64658974748d61c5edc4cc assets/lynx/models/block/generator.json
+2ae2739164ce6bbe7f9578ca0eb5970773a8a7b2 assets/lynx/models/block/generator.json
 707b1f842c280e441d79254346f84486341321db assets/lynx/models/item/generator.json

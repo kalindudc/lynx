@@ -5,21 +5,23 @@ import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.shared.IHasModelVariants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.data.client.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -30,11 +32,12 @@ public class Generator extends LynxBlock implements IHasModelVariants {
     public static final float BASE_ENERGY_OUTPUT = 3.0f;
     public static final String PROPERTY_ID = "generating";
 
+    public static final DirectionProperty FACING = HorizontalFacingBlock.FACING;
     private static final BooleanProperty GENERATING = BooleanProperty.of(PROPERTY_ID);
 
     public Generator(Identifier id, String translation, Settings settings) {
         super(id, translation, settings);
-        setDefaultState(getDefaultState().with(GENERATING, false));
+        setDefaultState(getDefaultState().with(GENERATING, false).with(FACING, Direction.NORTH));
     }
 
     public Property<Boolean> getProperty() {
@@ -45,24 +48,22 @@ public class Generator extends LynxBlock implements IHasModelVariants {
     public void generateModelVariants(BlockStateModelGenerator blockStateModelGenerator) {
         String suffix = "_" + PROPERTY_ID;
 
-        Identifier off = TexturedModel.CUBE_ALL.upload(this, blockStateModelGenerator.modelCollector);
-        Identifier on_id = TextureMap.getSubId(this, suffix);
-        Identifier on = TexturedModel.CUBE_ALL.get(this).textures(textures -> textures.put(TextureKey.ALL, on_id))
+        Identifier off = TexturedModel.ORIENTABLE.upload(this, blockStateModelGenerator.modelCollector);
+        Identifier on_id = TextureMap.getSubId(this, "_front" + suffix);
+        Identifier on = TexturedModel.ORIENTABLE.get(this).textures(textures -> textures.put(TextureKey.FRONT, on_id))
                 .upload(this, suffix, blockStateModelGenerator.modelCollector);
-
 
         blockStateModelGenerator.blockStateCollector.accept(
                 VariantsBlockStateSupplier.create(this)
-                        .coordinate(BlockStateVariantMap.create(GENERATING)
-                                .register(true, BlockStateVariant.create().put(VariantSettings.MODEL, on))
-                                .register(false, BlockStateVariant.create().put(VariantSettings.MODEL, off)))
+                        .coordinate(BlockStateModelGenerator.createBooleanModelMap(GENERATING, on, off))
+                        .coordinate(BlockStateModelGenerator.createNorthDefaultHorizontalRotationStates())
         );
     }
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         super.appendProperties(builder);
-        builder.add(GENERATING);
+        builder.add(GENERATING, FACING);
     }
 
     @SuppressWarnings("deprecation")
@@ -82,5 +83,22 @@ public class Generator extends LynxBlock implements IHasModelVariants {
         }
 
         world.setBlockState(pos, state.with(GENERATING, false));
+    }
+
+    @Override
+    public BlockState getPlacementState(ItemPlacementContext ctx) {
+        return this.getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public BlockState rotate(BlockState state, BlockRotation rotation) {
+        return state.with(FACING, rotation.rotate(state.get(FACING)));
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public BlockState mirror(BlockState state, BlockMirror mirror) {
+        return state.rotate(mirror.getRotation(state.get(FACING)));
     }
 }

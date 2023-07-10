@@ -1,6 +1,8 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/orientable",
   "textures": {
-    "all": "lynx:block/generator"
+    "front": "lynx:block/generator_front",
+    "side": "lynx:block/generator_side",
+    "top": "lynx:block/generator_top"
   }
 }
