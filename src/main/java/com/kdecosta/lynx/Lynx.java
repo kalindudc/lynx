@@ -2,6 +2,7 @@ package com.kdecosta.lynx;
 
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import com.kdecosta.lynx.registries.LynxItemRegistry;
+import com.kdecosta.lynx.registries.LynxOreRegistry;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -27,7 +28,7 @@ public class Lynx implements ModInitializer {
 
     public static final Identifier ITEM_GROUP_ID = new Identifier(MODID, "item_group");
     public static final ItemGroup ITEM_GROUP = FabricItemGroup.builder()
-            .icon(() -> new ItemStack(LynxItemRegistry.URANIUM_INGOT))
+            .icon(() -> new ItemStack(LynxOreRegistry.URANIUM_INGOT))
             .displayName(Text.translatable(MODID + ".item_group"))
             .build();
 
@@ -39,7 +40,9 @@ public class Lynx implements ModInitializer {
 
         LynxItemRegistry.registerAll();
         LynxBlockRegistry.registerAll();
+        LynxOreRegistry.registerAll();
 
+        // register creative mode tab with all the items
         ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, ITEM_GROUP_ID)).register(content -> {
             LynxBlockRegistry.BLOCK_ITEMS.forEach((name, blockItem) -> {
                 content.add(blockItem);

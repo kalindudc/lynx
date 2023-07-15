@@ -3,13 +3,11 @@ package com.kdecosta.lynx.registries;
 import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.block.Generator;
 import com.kdecosta.lynx.block.LynxBlock;
-import com.kdecosta.lynx.block.LynxBlockItem;
-import com.kdecosta.lynx.block.LynxOreBlock;
+import com.kdecosta.lynx.item.LynxBlockItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -26,15 +24,8 @@ public class LynxBlockRegistry {
     // Tag maps
     public static final List<String> MINEABLE_BLOCKS = new ArrayList<>();
 
-    // ORE
-    public static final LynxOreBlock URANIUM_ORE = createOreResource(
-            "uranium_ore",
-            "Uranium Ore",
-            FabricBlockSettings.create().strength(4.0f).requiresTool(),
-            -64, 0, 20, LynxItemRegistry.RAW_URANIUM);
-
     // Machines
-    public static final Generator GENERATOR = (Generator) createResource(
+    public static final Generator GENERATOR = (Generator) createBlock(
             new Generator(
                     new Identifier(Lynx.MODID, "generator"),
                     "Generator",
@@ -52,7 +43,7 @@ public class LynxBlockRegistry {
         }
     }
 
-    public static LynxBlock createResource(LynxBlock block) {
+    public static LynxBlock createBlock(LynxBlock block) {
         createBlockItem(block, new FabricItemSettings());
 
         BLOCKS.put(block.getId().getPath(), block);
@@ -66,12 +57,5 @@ public class LynxBlockRegistry {
         BLOCK_ITEMS.put(block.getId().getPath(), blockItem);
 
         return blockItem;
-    }
-
-    public static LynxOreBlock createOreResource(String name, String translation, FabricBlockSettings settings, int minY, int maxY, int veinSize, Item lootDrop) {
-        LynxOreBlock block = new LynxOreBlock(new Identifier(Lynx.MODID, name), translation, settings, minY, maxY, veinSize, lootDrop);
-        createResource(block);
-
-        return block;
     }
 }

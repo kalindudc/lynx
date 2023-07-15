@@ -1,5 +1,6 @@
-package com.kdecosta.lynx.block;
+package com.kdecosta.lynx.item;
 
+import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.shared.ILynxResource;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;

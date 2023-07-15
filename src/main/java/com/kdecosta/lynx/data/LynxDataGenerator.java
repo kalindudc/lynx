@@ -13,5 +13,6 @@ public class LynxDataGenerator implements DataGeneratorEntrypoint {
         lynxPack.addProvider(LynxBlockLootTableProvider::new);
         lynxPack.addProvider(LynxModelGeneratorProvider::new);
         lynxPack.addProvider(LynxEnglishLanguageProvider::new);
+        lynxPack.addProvider(LynxRecipeProvider::new);
     }
 }

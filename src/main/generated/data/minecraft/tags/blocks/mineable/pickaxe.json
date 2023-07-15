@@ -1,7 +1,7 @@
 {
   "replace": false,
   "values": [
-    "lynx:uranium_ore",
-    "lynx:generator"
+    "lynx:generator",
+    "lynx:uranium_ore"
   ]
 }

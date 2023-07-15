@@ -1,7 +1,5 @@
 package com.kdecosta.lynx.block;
 
-import com.google.gson.JsonPrimitive;
-import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.shared.IHasModelVariants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -16,7 +14,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.DirectionProperty;
-import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
@@ -24,8 +21,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-
-import java.util.HashMap;
 
 public class Generator extends LynxBlock implements IHasModelVariants {
 
@@ -77,7 +72,7 @@ public class Generator extends LynxBlock implements IHasModelVariants {
     @Override
     public void onSteppedOn(World world, BlockPos pos, BlockState state, Entity entity) {
         if (world.getBlockState(pos).get(GENERATING)) {
-            LightningEntity lightningEntity = (LightningEntity) EntityType.LIGHTNING_BOLT.create(world);
+            LightningEntity lightningEntity = EntityType.LIGHTNING_BOLT.create(world);
             lightningEntity.refreshPositionAfterTeleport(Vec3d.ofBottomCenter(pos));
             world.spawnEntity(lightningEntity);
         }

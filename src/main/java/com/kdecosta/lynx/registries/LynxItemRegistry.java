@@ -12,11 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LynxItemRegistry {
-
     public static final Map<String, Item> ITEMS = new HashMap<>();
-
-    public static final LynxItem RAW_URANIUM = createItem("raw_uranium", "Raw Uranium", new FabricItemSettings());
-    public static final LynxItem URANIUM_INGOT = createItem("uranium_ingot", "Uranium Ingot", new FabricItemSettings());
 
     public static void registerAll() {
         for (Map.Entry<String, Item> itemEntry: ITEMS.entrySet()) {
@@ -28,7 +24,6 @@ public class LynxItemRegistry {
     public static LynxItem createItem(String name, String translation, FabricItemSettings settings) {
         LynxItem item = new LynxItem(new Identifier(Lynx.MODID, name), translation, settings);
         ITEMS.put(name, item);
-
         return item;
     }
 }
