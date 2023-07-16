@@ -2,6 +2,7 @@ package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.block.Generator;
+import com.kdecosta.lynx.block.base.LynxMachine;
 import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.item.LynxBlockItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -25,11 +26,10 @@ public class LynxBlockRegistry {
     public static final List<String> MINEABLE_BLOCKS = new ArrayList<>();
 
     // Machines
-    public static final Generator GENERATOR = (Generator) createBlock(
+    public static final LynxMachine GENERATOR = (LynxMachine) createBlock(
             new Generator(
                     new Identifier(Lynx.MODID, "generator"),
-                    "Generator",
-                    FabricBlockSettings.create().strength(4.0f).requiresTool()));
+                    "Generator"));
 
     public static void registerAll() {
         for (Map.Entry<String, Block> blockEntry: BLOCKS.entrySet()) {
