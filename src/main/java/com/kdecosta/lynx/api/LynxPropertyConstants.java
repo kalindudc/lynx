@@ -1,8 +1,6 @@
-package com.kdecosta.lynx.shared;
+package com.kdecosta.lynx.api;
 
-import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
 
 public class LynxPropertyConstants {
     public static final String GENERATING_PROPERTY_ID = "generating";

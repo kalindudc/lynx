@@ -18,17 +18,18 @@ public class LynxBlockEntityRegistry {
 
     static {
         registerBlockEntity(
-            new Identifier(Lynx.MODID, "generator_block_entity"),
-            LynxBlockRegistry.GENERATOR,
-            GeneratorBlockEntity::new
+                new Identifier(Lynx.MODID, "generator_block_entity"),
+                LynxBlockRegistry.GENERATOR,
+                GeneratorBlockEntity::new
         );
     }
+
     public static void registerAll() {
         REGISTRY.forEach((block, registryItem) -> {
             BlockEntityType<? extends BlockEntity> blockEntityType = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                registryItem.getId(),
-                FabricBlockEntityTypeBuilder.create(registryItem.getBlockEntityFactory(), block).build()
+                    Registries.BLOCK_ENTITY_TYPE,
+                    registryItem.id(),
+                    FabricBlockEntityTypeBuilder.create(registryItem.blockEntityFactory(), block).build()
             );
             BLOCK_ENTITY_TYPES.put(block, blockEntityType);
         });
@@ -39,27 +40,7 @@ public class LynxBlockEntityRegistry {
         REGISTRY.put(block, registryItem);
     }
 
-    private static class LynxBlockEntityRegistryItem {
-        private final Identifier id;
-        private final Block block;
-        private final FabricBlockEntityTypeBuilder.Factory<? extends BlockEntity> blockEntityFactory;
-
-        private LynxBlockEntityRegistryItem(Identifier id, Block block, FabricBlockEntityTypeBuilder.Factory<? extends BlockEntity> blockEntityFactory) {
-            this.id = id;
-            this.block = block;
-            this.blockEntityFactory = blockEntityFactory;
-        }
-
-        public Identifier getId() {
-            return id;
-        }
-
-        public Block getBlock() {
-            return block;
-        }
-
-        public FabricBlockEntityTypeBuilder.Factory<? extends BlockEntity> getBlockEntityFactory() {
-            return blockEntityFactory;
-        }
+    private record LynxBlockEntityRegistryItem(Identifier id, Block block,
+                                               FabricBlockEntityTypeBuilder.Factory<? extends BlockEntity> blockEntityFactory) {
     }
 }

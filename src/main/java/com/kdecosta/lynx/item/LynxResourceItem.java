@@ -7,6 +7,7 @@ import net.minecraft.util.Identifier;
 public class LynxResourceItem extends LynxItem implements ITypedResource {
 
     private final LynxResources.IResource resourceType;
+
     public LynxResourceItem(Identifier id, String translation, Settings settings, LynxResources.IResource resourceType) {
         super(id, translation, settings);
         this.resourceType = resourceType;

@@ -8,7 +8,6 @@ import com.kdecosta.lynx.registries.LynxItemRegistry;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.block.Block;
-import net.minecraft.data.client.Models;
 import net.minecraft.item.Item;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -24,12 +23,12 @@ public class LynxEnglishLanguageProvider extends FabricLanguageProvider {
     public void generateTranslations(TranslationBuilder translationBuilder) {
         translationBuilder.add(RegistryKey.of(RegistryKeys.ITEM_GROUP, Lynx.ITEM_GROUP_ID), "Lynx");
 
-        for (Map.Entry<String, Block> entry: LynxBlockRegistry.BLOCKS.entrySet()) {
+        for (Map.Entry<String, Block> entry : LynxBlockRegistry.BLOCKS.entrySet()) {
             LynxBlock block = (LynxBlock) entry.getValue();
             translationBuilder.add(block, block.getTranslation());
         }
 
-        for (Map.Entry<String, Item> entry: LynxItemRegistry.ITEMS.entrySet()) {
+        for (Map.Entry<String, Item> entry : LynxItemRegistry.ITEMS.entrySet()) {
             LynxItem item = (LynxItem) entry.getValue();
             translationBuilder.add(item, item.getTranslation());
         }

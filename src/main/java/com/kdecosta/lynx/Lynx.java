@@ -1,11 +1,8 @@
 package com.kdecosta.lynx;
 
-import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
-import com.kdecosta.lynx.registries.LynxBlockRegistry;
-import com.kdecosta.lynx.registries.LynxItemRegistry;
-import com.kdecosta.lynx.registries.LynxOreRegistry;
+import com.kdecosta.lynx.networking.LynxPacketHandler;
+import com.kdecosta.lynx.registries.*;
 import net.fabricmc.api.ModInitializer;
-
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.item.ItemGroup;
@@ -39,6 +36,7 @@ public class Lynx implements ModInitializer {
         LynxBlockRegistry.registerAll();
         LynxOreRegistry.registerAll();
         LynxBlockEntityRegistry.registerAll();
+        LynxScreenHandlerRegistry.registerAll();
 
         // register creative mode tab with all the items
         ItemGroupEvents.modifyEntriesEvent(RegistryKey.of(RegistryKeys.ITEM_GROUP, ITEM_GROUP_ID)).register(content -> {
@@ -50,5 +48,9 @@ public class Lynx implements ModInitializer {
                 content.add(item);
             });
         });
+
+        LynxPacketHandler.registerPacketHandlers();
+
+
     }
 }

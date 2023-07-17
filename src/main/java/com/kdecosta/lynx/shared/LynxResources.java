@@ -1,7 +1,6 @@
 package com.kdecosta.lynx.shared;
 
 import net.minecraft.block.Block;
-import net.minecraft.item.ToolMaterial;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.TagKey;
 

@@ -15,7 +15,7 @@ public class LynxItemRegistry {
     public static final Map<String, Item> ITEMS = new HashMap<>();
 
     public static void registerAll() {
-        for (Map.Entry<String, Item> itemEntry: ITEMS.entrySet()) {
+        for (Map.Entry<String, Item> itemEntry : ITEMS.entrySet()) {
             Item item = itemEntry.getValue();
             Registry.register(Registries.ITEM, ((LynxItem) item).getId(), item);
         }

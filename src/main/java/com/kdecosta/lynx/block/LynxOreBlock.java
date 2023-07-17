@@ -26,6 +26,7 @@ public class LynxOreBlock extends LynxBlock implements IHasLootDrop, ITypedResou
 
     /**
      * The maximum vein size of this ore block when generating in the world
+     *
      * @return the maximum vein size
      */
     public int getVeinSize() {

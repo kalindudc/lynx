@@ -1,6 +1,5 @@
 package com.kdecosta.lynx.data.provider;
 
-import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
@@ -17,7 +16,7 @@ public class LynxBlockTagProvider extends FabricTagProvider.BlockTagProvider {
 
     @Override
     protected void configure(RegistryWrapper.WrapperLookup arg) {
-        for (String blockName: LynxBlockRegistry.MINEABLE_BLOCKS) {
+        for (String blockName : LynxBlockRegistry.MINEABLE_BLOCKS) {
             Block block = LynxBlockRegistry.BLOCKS.get(blockName);
             getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE).add(block);
             getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL).add(block);

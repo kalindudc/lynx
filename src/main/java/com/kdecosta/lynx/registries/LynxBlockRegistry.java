@@ -2,11 +2,10 @@ package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.block.Generator;
-import com.kdecosta.lynx.block.base.LynxMachine;
 import com.kdecosta.lynx.block.LynxBlock;
+import com.kdecosta.lynx.block.base.LynxMachine;
 import com.kdecosta.lynx.item.LynxBlockItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
 import net.minecraft.registry.Registries;
@@ -32,12 +31,12 @@ public class LynxBlockRegistry {
                     "Generator"));
 
     public static void registerAll() {
-        for (Map.Entry<String, Block> blockEntry: BLOCKS.entrySet()) {
+        for (Map.Entry<String, Block> blockEntry : BLOCKS.entrySet()) {
             Block block = blockEntry.getValue();
             Registry.register(Registries.BLOCK, ((LynxBlock) block).getId(), block);
         }
 
-        for (Map.Entry<String, BlockItem> blockItemEntry: BLOCK_ITEMS.entrySet()) {
+        for (Map.Entry<String, BlockItem> blockItemEntry : BLOCK_ITEMS.entrySet()) {
             BlockItem blockItem = blockItemEntry.getValue();
             Registry.register(Registries.ITEM, ((LynxBlockItem) blockItem).getId(), blockItem);
         }
