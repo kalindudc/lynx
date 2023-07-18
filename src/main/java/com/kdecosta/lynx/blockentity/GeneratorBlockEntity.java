@@ -1,9 +1,12 @@
 package com.kdecosta.lynx.blockentity;
 
+import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxPropertyConstants;
-import com.kdecosta.lynx.block.Generator;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
+import com.kdecosta.lynx.energy.BurnTimer;
+import com.kdecosta.lynx.energy.EnergyUnit;
 import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import com.kdecosta.lynx.screen.GeneratorScreenHandler;
@@ -14,61 +17,69 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+
 public class GeneratorBlockEntity extends LynxBlockEntity {
-    private float remainingFuel;
-    private float energy;
+
+    private EnergyUnit energy;
+    private BurnTimer burnTimer;
 
     public GeneratorBlockEntity(BlockPos pos, BlockState state) {
         super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1);
 
-        this.remainingFuel = 0f;
-        this.energy = 0f;
+        this.burnTimer = new BurnTimer();
+        this.energy = new EnergyUnit();
     }
 
     public boolean isGenerating() {
-        return this.remainingFuel > 0f;
+        return this.burnTimer.isTimerDone();
     }
 
-    public float getRemainingFuel() {
-        return remainingFuel;
+    public boolean isFull() {
+        return this.energy.getEnergy() >= LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy();
     }
 
-    public void setRemainingFuel(float remainingFuel) {
-        this.remainingFuel = remainingFuel;
-        markDirty();
-    }
-
-    public float getEnergy() {
+    public EnergyUnit getEnergy() {
         return energy;
-    }
-
-    public void setEnergy(float energy) {
-        this.energy = energy;
-        markDirty();
     }
 
     public void tick(World world, BlockPos pos, BlockState state, LynxBlockEntity blockEntity) {
 
         if (world.isClient) return;
+        sendDataToPlayers();
+
+        if (isFull()) {
+            if (this.energy.getEnergy() > LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy())
+                this.energy.setEnergy(LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy());
+
+            if (state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
+                world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, false));
+            }
+            return;
+        }
+
         if (isGenerating()) {
-            this.remainingFuel -= 1f;
-            this.energy += Generator.BASE_ENERGY_OUTPUT;
+            this.burnTimer.tick();
+            try {
+                this.energy.tick();
+            } catch (EnergyUnit.EnergyUnitTooLargeException e) {
+                throw new RuntimeException(e);
+            }
+            Lynx.LOGGER.info(String.format("%d", energy.getEnergy()));
+            Lynx.LOGGER.info(String.format("%d", energy.injectionRate()));
 
             if (!state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
                 world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, true));
             }
             markDirty();
-            sendDataToPlayers();
             return;
         }
 
@@ -77,62 +88,47 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
             loadFuel();
         } else if (state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
             world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, false));
+            this.energy.setInjectionRate(0);
         }
     }
 
     public boolean isFuel(Item item) {
-        return (item.equals(Items.COAL) ||
-                item.equals(Items.COAL_BLOCK) ||
-                item.equals(Items.CHARCOAL)
-        );
-    }
-
-    public void handleItemInjection(PlayerEntity player, Hand hand) {
-        ItemStack itemStack = player.getStackInHand(hand);
-        if (getStack(0).isEmpty()) {
-            // try to add item
-            if (isFuel(itemStack.getItem())) {
-                setStack(0, itemStack.copy());
-                player.getStackInHand(hand).setCount(0);
-            }
-        } else {
-            // try to add the same item
-            ItemStack curentItemStack = getStack(0);
-            Item currentItemOnPlayer = itemStack.getItem();
-
-            if (curentItemStack.getCount() < curentItemStack.getMaxCount() && curentItemStack.getItem().equals(currentItemOnPlayer)) {
-                int maxAcceptable = curentItemStack.getMaxCount() - curentItemStack.getCount();
-                int acceptable = Math.min(maxAcceptable, itemStack.getCount());
-
-                curentItemStack.setCount(curentItemStack.getCount() + acceptable);
-                setStack(0, curentItemStack.copy());
-                player.getStackInHand(hand).setCount(itemStack.getCount() - acceptable);
-            }
-        }
+        return LynxMachineConstants.GENERATOR_BURN_RATE_IN_SECONDS.containsKey(item);
     }
 
     private void loadFuel() {
-        this.remainingFuel = 20f * 5f;
-
         ItemStack stack = getStack(0);
-        stack.setCount(stack.getCount() - 1);
+        if (!isFuel(stack.getItem())) return;
 
+        this.burnTimer.setInSeconds(LynxMachineConstants.GENERATOR_BURN_RATE_IN_SECONDS.get(stack.getItem()));
+        this.energy.setInjectionRate(LynxMachineConstants.GENERATOR_ENERGY_RATES.get(stack.getItem()));
+
+        stack.setCount(stack.getCount() - 1);
         setStack(0, stack.copy());
         markDirty();
     }
 
     @Override
     protected void writeNbt(NbtCompound nbt) {
-        nbt.putFloat("remaining_fuel", remainingFuel);
-        nbt.putFloat("energy", energy);
+        try {
+            nbt.putByteArray("burn_timer", BurnTimer.getBytes(burnTimer));
+            nbt.putByteArray("energy", EnergyUnit.getBytes(energy));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         super.writeNbt(nbt);
     }
 
     @Override
     public void readNbt(NbtCompound nbt) {
+        Lynx.LOGGER.info("reading nbt");
         super.readNbt(nbt);
-        remainingFuel = nbt.getFloat("remaining_fuel");
-        energy = nbt.getFloat("energy");
+        try {
+            burnTimer = BurnTimer.fromBytes(nbt.getByteArray("burn_timer"));
+            energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -148,8 +144,7 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
     @Override
     public void sendDataToPlayers() {
         NbtCompound nbt = new NbtCompound();
-        nbt.putFloat("energy", energy);
-        nbt.putFloat("remaining_fuel", remainingFuel);
+        this.writeNbt(nbt);
 
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeNbt(nbt);

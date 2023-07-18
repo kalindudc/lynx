@@ -1,7 +1,8 @@
 package com.kdecosta.lynx.screen;
 
 import com.kdecosta.lynx.api.LynxScreenConstants;
-import com.kdecosta.lynx.blockentity.GeneratorBlockEntity;
+import com.kdecosta.lynx.energy.BurnTimer;
+import com.kdecosta.lynx.energy.EnergyUnit;
 import com.kdecosta.lynx.screen.base.LynxScreen;
 import com.kdecosta.lynx.screen.base.LynxScreenHandler;
 import net.minecraft.client.gui.DrawContext;
@@ -13,13 +14,13 @@ import net.minecraft.util.Identifier;
 
 public class GeneratorScreen extends LynxScreen {
 
-    private float energy;
-    private float remainingFuel;
+    private EnergyUnit energy;
+    private BurnTimer burnTimer;
 
     public GeneratorScreen(LynxScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
-        this.energy = 0f;
-        this.remainingFuel = 0f;
+        this.energy = new EnergyUnit();
+        this.burnTimer = new BurnTimer();
     }
 
     @Override
@@ -41,18 +42,20 @@ public class GeneratorScreen extends LynxScreen {
         int x = (width - backgroundWidth) / 2;
         int y = (height - backgroundHeight) / 2;
 
-        if (handler.getInventory() instanceof GeneratorBlockEntity entity) {
-            context.drawText(client.textRenderer, String.format("%f", entity.getEnergy()), x + 150, y + 54, 11141120, false);
-        }
-        context.drawText(client.textRenderer, String.format("%f", energy), x + 150, y + 18, 11141120, false);
-        context.drawText(client.textRenderer, String.format("%f", remainingFuel), x + 150, y + 36, 11141120, false);
+        context.drawText(client.textRenderer, String.format("%d", energy.getEnergy()), x + 100, y + 18, 11141120, false);
+        context.drawText(client.textRenderer, String.format("%d", burnTimer.remaining()), x + 100, y + 36, 11141120, false);
     }
 
     public void handlePacket(PacketByteBuf buf) {
         NbtCompound nbt = buf.readNbt();
 
         if (nbt == null) return;
-        this.energy = nbt.getFloat("energy");
-        this.remainingFuel = nbt.getFloat("remaining_fuel");
+
+        try {
+            burnTimer = BurnTimer.fromBytes(nbt.getByteArray("burn_timer"));
+            energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
