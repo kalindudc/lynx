@@ -1,8 +1,8 @@
 package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
-import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.block.LynxOreBlock;
+import com.kdecosta.lynx.block.base.LynxBlock;
 import com.kdecosta.lynx.item.LynxBlockItem;
 import com.kdecosta.lynx.item.LynxItem;
 import com.kdecosta.lynx.item.LynxResourceItem;

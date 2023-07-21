@@ -1,5 +1,6 @@
 package com.kdecosta.lynx.block;
 
+import com.kdecosta.lynx.block.base.LynxBlock;
 import com.kdecosta.lynx.shared.IHasLootDrop;
 import com.kdecosta.lynx.shared.ITypedResource;
 import com.kdecosta.lynx.shared.LynxResources;

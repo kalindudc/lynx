@@ -1,12 +1,13 @@
 package com.kdecosta.lynx.blockentity.base;
 
-import com.kdecosta.lynx.api.LynxConstants;
-import com.kdecosta.lynx.energy.EnergyUnit;
+import com.kdecosta.lynx.api.LynxMachineConstants;
+import com.kdecosta.lynx.shared.dataunit.EnergyUnit;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
 import java.io.IOException;
@@ -15,13 +16,14 @@ import java.util.HashMap;
 import java.util.List;
 
 public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
-    private final long maxInjectionRate;
-    private final long maxExtractionRate;
-    private final long maxEnergy;
     private final HashMap<LynxMachineBlockEntity, Producer> producers;
     private final HashMap<LynxMachineBlockEntity, BlockPos> consumers;
 
     private EnergyUnit energy;
+    private long maxInjectionRate;
+    private long maxExtractionRate;
+    private long maxEnergy;
+    private boolean triggerSearch;
 
     public LynxMachineBlockEntity(BlockPos pos, BlockState state, BlockEntityType<? extends BlockEntity> blockEntityType, int itemStackSize,
                                   long maxEnergy, long maxInjectionRate, long maxExtractionRate) {
@@ -34,25 +36,14 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         this.maxExtractionRate = maxExtractionRate;
         this.maxEnergy = maxEnergy;
         this.energy = new EnergyUnit();
-    }
-
-    public HashMap<LynxMachineBlockEntity, Producer> getProducers() {
-        return producers;
-    }
-
-    public HashMap<LynxMachineBlockEntity, BlockPos> getConsumers() {
-        return consumers;
+        this.triggerSearch = false;
     }
 
     public void searchAndRegister(World world, BlockPos pos) {
         if (world.isClient) return;
 
-        for (BlockPos cordOffset : LynxConstants.SEARCH_CORDS) {
-            BlockPos newPos = new BlockPos(
-                    pos.getX() + cordOffset.getX(),
-                    pos.getY() + cordOffset.getY(),
-                    pos.getZ() + cordOffset.getZ()
-            );
+        for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
+            BlockPos newPos = pos.add(direction.getVector());
             if (!(world.getBlockEntity(newPos) instanceof LynxMachineBlockEntity entity)) continue;
 
             if (entity.canConsumeEnergy()) registerConsumer(entity, entity.getPos());
@@ -71,6 +62,11 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
     @Override
     public void tick(World world, BlockPos pos, BlockState state, LynxBlockEntity blockEntity) {
         if (world.isClient) return;
+
+        if (this.triggerSearch) {
+            searchAndRegister(world, pos);
+            this.triggerSearch = false;
+        }
 
         verifyProducers();
         verifyConsumers();
@@ -214,6 +210,9 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         try {
             nbt.putByteArray("energy", EnergyUnit.getBytes(energy));
+            nbt.putLong("max_energy", maxEnergy);
+            nbt.putLong("max_extraction_rate", maxExtractionRate);
+            nbt.putLong("max_injection_rate", maxInjectionRate);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -225,6 +224,12 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         super.readNbt(nbt);
         try {
             energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
+            maxEnergy = nbt.getLong("max_energy");
+            maxExtractionRate = nbt.getLong("max_extraction_rate");
+            maxInjectionRate = nbt.getLong("max_injection_rate");
+            energy.setExtractionRate(0);
+            energy.setInjectionRate(0);
+            triggerSearch = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

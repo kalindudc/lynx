@@ -3,7 +3,7 @@ package com.kdecosta.lynx.registries;
 import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.block.EnergyCell;
 import com.kdecosta.lynx.block.Generator;
-import com.kdecosta.lynx.block.LynxBlock;
+import com.kdecosta.lynx.block.base.LynxBlock;
 import com.kdecosta.lynx.block.base.LynxMachine;
 import com.kdecosta.lynx.item.LynxBlockItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;

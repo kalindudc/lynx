@@ -1,4 +1,4 @@
-package com.kdecosta.lynx.energy;
+package com.kdecosta.lynx.shared.dataunit;
 
 import java.io.*;
 

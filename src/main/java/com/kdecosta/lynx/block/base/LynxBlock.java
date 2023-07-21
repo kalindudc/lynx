@@ -1,4 +1,4 @@
-package com.kdecosta.lynx.block;
+package com.kdecosta.lynx.block.base;
 
 import com.kdecosta.lynx.shared.ILynxResource;
 import net.minecraft.block.BlockState;

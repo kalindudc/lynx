@@ -1,10 +1,10 @@
 package com.kdecosta.lynx.screen;
 
 import com.kdecosta.lynx.api.LynxScreenConstants;
-import com.kdecosta.lynx.energy.BurnTimer;
-import com.kdecosta.lynx.energy.EnergyUnit;
 import com.kdecosta.lynx.screen.base.LynxScreen;
 import com.kdecosta.lynx.screen.base.LynxScreenHandler;
+import com.kdecosta.lynx.shared.dataunit.BurnTimer;
+import com.kdecosta.lynx.shared.dataunit.EnergyUnit;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.NbtCompound;

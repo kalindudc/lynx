@@ -5,10 +5,10 @@ import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxPropertyConstants;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
 import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
-import com.kdecosta.lynx.energy.BurnTimer;
 import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import com.kdecosta.lynx.screen.GeneratorScreenHandler;
+import com.kdecosta.lynx.shared.dataunit.BurnTimer;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.block.BlockState;
@@ -29,11 +29,13 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
     public static final long MAX_EXTRACTION_RATE = 256;
 
     private BurnTimer burnTimer;
+    private long rate;
 
     public GeneratorBlockEntity(BlockPos pos, BlockState state) {
         super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1,
                 LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.energy(), 0, MAX_EXTRACTION_RATE);
 
+        this.rate = 0;
         this.burnTimer = new BurnTimer();
     }
 
@@ -73,6 +75,10 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
         }
 
         if (isGenerating()) {
+            if (getEnergy().extractionRate() == 0) {
+                setInjectionRate(rate);
+            }
+
             this.burnTimer.tick();
 
             if (!state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
@@ -99,7 +105,8 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
         if (!isFuel(stack.getItem())) return;
 
         this.burnTimer.setInSeconds(LynxMachineConstants.GENERATOR_BURN_RATE_IN_SECONDS.get(stack.getItem()));
-        setInjectionRate(LynxMachineConstants.GENERATOR_ENERGY_RATES.get(stack.getItem()));
+        this.rate = LynxMachineConstants.GENERATOR_ENERGY_RATES.get(stack.getItem());
+        setInjectionRate(this.rate);
 
         this.getStack(0).setCount(stack.getCount() - 1);
         markDirty();
@@ -109,6 +116,7 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         try {
             nbt.putByteArray("burn_timer", BurnTimer.getBytes(burnTimer));
+            nbt.putLong("generator_production_rate", rate);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -120,6 +128,7 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
         super.readNbt(nbt);
         try {
             burnTimer = BurnTimer.fromBytes(nbt.getByteArray("burn_timer"));
+            rate = nbt.getLong("generator_production_rate");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

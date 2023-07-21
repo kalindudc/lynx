@@ -1,7 +1,7 @@
 package com.kdecosta.lynx.block.base;
 
-import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
+import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
 import com.kdecosta.lynx.shared.IHasModelVariants;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
@@ -12,8 +12,10 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.data.client.*;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -37,8 +39,7 @@ public abstract class LynxMachine extends LynxBlock implements IHasModelVariants
         super(id, translation, FabricBlockSettings.create().strength(4.0f).requiresTool().nonOpaque());
 
         this.facedBlock = facedBlock;
-        if (facedBlock) setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
-
+        setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
         setPropertyDefaults();
     }
 
@@ -169,5 +170,14 @@ public abstract class LynxMachine extends LynxBlock implements IHasModelVariants
     @Override
     public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
         return ScreenHandler.calculateComparatorOutput(world.getBlockEntity(pos));
+    }
+
+    @Override
+    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        super.onPlaced(world, pos, state, placer, itemStack);
+        if (world.isClient) return;
+        if (!(world.getBlockEntity(pos) instanceof LynxMachineBlockEntity entity)) return;
+
+        entity.searchAndRegister(world, pos);
     }
 }
