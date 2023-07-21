@@ -37,6 +37,7 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
 
         this.rate = 0;
         this.burnTimer = new BurnTimer();
+        setAllSidesExtractable();
     }
 
     public boolean isGenerating() {
@@ -58,7 +59,6 @@ public class GeneratorBlockEntity extends LynxMachineBlockEntity {
         super.tick(world, pos, state, blockEntity);
 
         if (world.isClient) return;
-        verifyConsumers();
         sendDataToPlayers();
         handleFuelAndEnergyGeneration(world, pos, state, blockEntity);
     }
