@@ -1,4 +1,5 @@
 {
+  "block.lynx.energy_cell": "Energy Cell",
   "block.lynx.generator": "Generator",
   "block.lynx.uranium_ore": "Uranium Ore",
   "item.lynx.raw_uranium": "Raw Uranium",

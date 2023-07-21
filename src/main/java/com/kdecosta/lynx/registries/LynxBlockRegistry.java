@@ -1,6 +1,7 @@
 package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.block.EnergyCell;
 import com.kdecosta.lynx.block.Generator;
 import com.kdecosta.lynx.block.LynxBlock;
 import com.kdecosta.lynx.block.base.LynxMachine;
@@ -19,6 +20,7 @@ import java.util.Map;
 
 public class LynxBlockRegistry {
     public static final Map<String, Block> BLOCKS = new HashMap<>();
+    public static final Map<String, Block> TRANSLUCENT_BLOCKS = new HashMap<>();
     public static final Map<String, BlockItem> BLOCK_ITEMS = new HashMap<>();
 
     // Tag maps
@@ -28,25 +30,28 @@ public class LynxBlockRegistry {
     public static final LynxMachine GENERATOR = (LynxMachine) createBlock(
             new Generator(
                     new Identifier(Lynx.MODID, "generator"),
-                    "Generator"));
+                    "Generator"), false);
+    public static final LynxMachine ENERGY_CELL = (LynxMachine) createBlock(
+            new EnergyCell(
+                    new Identifier(Lynx.MODID, "energy_cell"),
+                    "Energy Cell"), true);
 
     public static void registerAll() {
-        for (Map.Entry<String, Block> blockEntry : BLOCKS.entrySet()) {
-            Block block = blockEntry.getValue();
+        BLOCKS.forEach((name, block) -> {
             Registry.register(Registries.BLOCK, ((LynxBlock) block).getId(), block);
-        }
+        });
 
-        for (Map.Entry<String, BlockItem> blockItemEntry : BLOCK_ITEMS.entrySet()) {
-            BlockItem blockItem = blockItemEntry.getValue();
-            Registry.register(Registries.ITEM, ((LynxBlockItem) blockItem).getId(), blockItem);
-        }
+        BLOCK_ITEMS.forEach((name, item) -> {
+            Registry.register(Registries.ITEM, ((LynxBlockItem) item).getId(), item);
+        });
     }
 
-    public static LynxBlock createBlock(LynxBlock block) {
+    public static LynxBlock createBlock(LynxBlock block, boolean isTranslucent) {
         createBlockItem(block, new FabricItemSettings());
 
         BLOCKS.put(block.getId().getPath(), block);
         MINEABLE_BLOCKS.add(block.getId().getPath());
+        if (isTranslucent) TRANSLUCENT_BLOCKS.put(block.getId().getPath(), block);
 
         return block;
     }

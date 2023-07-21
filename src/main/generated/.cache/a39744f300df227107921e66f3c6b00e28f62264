@@ -1,3 +1,4 @@
-// 1.20.1	2023-07-15T12:07:18.357172	lynx/Block Loot Tables
+// 1.20.1	2023-07-19T21:55:16.566945	lynx/Block Loot Tables
 7bdedbf5f8c10aea54b07b57bd1259eaf948ad38 data/lynx/loot_tables/blocks/uranium_ore.json
+3317edd7f36fd26942eb5d5b8dfd99692445471e data/lynx/loot_tables/blocks/energy_cell.json
 db414c521b4d08dcec96d6d6281f7233552d1ea6 data/lynx/loot_tables/blocks/generator.json

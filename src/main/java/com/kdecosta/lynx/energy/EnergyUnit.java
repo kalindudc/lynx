@@ -1,7 +1,5 @@
 package com.kdecosta.lynx.energy;
 
-import com.kdecosta.lynx.Lynx;
-
 import java.io.*;
 
 public class EnergyUnit implements Serializable {
@@ -25,7 +23,7 @@ public class EnergyUnit implements Serializable {
         this.extractionRate = 0L;
     }
 
-    public long getEnergy() {
+    public long energy() {
         return this.energy;
     }
 
@@ -38,15 +36,13 @@ public class EnergyUnit implements Serializable {
             this.energy += energy;
             if (this.energy > MAX_ENERGY)
                 throw new EnergyUnitTooLargeException("this energy unit exceeds maximum energy value");
-
-            Lynx.LOGGER.info(String.format("In adder, %d ", this.energy));
         } catch (Exception e) {
             throw new EnergyUnitTooLargeException("this energy unit exceeds maximum energy value");
         }
     }
 
     public void add(EnergyUnit energy) throws EnergyUnitTooLargeException {
-        this.add(energy.getEnergy());
+        this.add(energy.energy());
     }
 
     public void subtract(long energy) {
@@ -59,7 +55,7 @@ public class EnergyUnit implements Serializable {
     }
 
     public void subtract(EnergyUnit energy) {
-        this.subtract(energy.getEnergy());
+        this.subtract(energy.energy());
     }
 
     public void increment() throws EnergyUnitTooLargeException {
@@ -80,6 +76,10 @@ public class EnergyUnit implements Serializable {
     }
 
     public void setInjectionRate(long injectionRate) {
+        if (injectionRate < 0) {
+            this.injectionRate = 0;
+            return;
+        }
         this.injectionRate = injectionRate;
     }
 
@@ -88,6 +88,10 @@ public class EnergyUnit implements Serializable {
     }
 
     public void setExtractionRate(long extractionRate) {
+        if (extractionRate < 0) {
+            this.extractionRate = 0;
+            return;
+        }
         this.extractionRate = extractionRate;
     }
 

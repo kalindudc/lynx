@@ -1,6 +1,7 @@
 package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.screen.EnergyCellScreenHandler;
 import com.kdecosta.lynx.screen.GeneratorScreenHandler;
 import com.kdecosta.lynx.screen.base.LynxScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
@@ -22,6 +23,11 @@ public class LynxScreenHandlerRegistry {
                 new Identifier(Lynx.MODID, "generator_screen_handler"),
                 LynxBlockRegistry.GENERATOR,
                 new ExtendedScreenHandlerType<ScreenHandler>(GeneratorScreenHandler::new)
+        );
+        registerScreenHandler(
+                new Identifier(Lynx.MODID, "energy_cell_screen_handler"),
+                LynxBlockRegistry.ENERGY_CELL,
+                new ExtendedScreenHandlerType<ScreenHandler>(EnergyCellScreenHandler::new)
         );
     }
 

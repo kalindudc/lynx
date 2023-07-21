@@ -1,6 +1,7 @@
 package com.kdecosta.lynx.registries;
 
 import com.kdecosta.lynx.Lynx;
+import com.kdecosta.lynx.blockentity.EnergyCellBlockEntity;
 import com.kdecosta.lynx.blockentity.GeneratorBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.Block;
@@ -21,6 +22,12 @@ public class LynxBlockEntityRegistry {
                 new Identifier(Lynx.MODID, "generator_block_entity"),
                 LynxBlockRegistry.GENERATOR,
                 GeneratorBlockEntity::new
+        );
+
+        registerBlockEntity(
+                new Identifier(Lynx.MODID, "energy_cell_block_entity"),
+                LynxBlockRegistry.ENERGY_CELL,
+                EnergyCellBlockEntity::new
         );
     }
 

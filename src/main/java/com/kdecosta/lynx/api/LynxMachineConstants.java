@@ -19,7 +19,6 @@ public class LynxMachineConstants {
             put(Items.CHARCOAL, 10);
         }
     };
-
     public static final HashMap<Item, Long> GENERATOR_ENERGY_RATES = new HashMap<>() {
         @Serial
         private static final long serialVersionUID = -7687071522124096713L;
@@ -31,4 +30,5 @@ public class LynxMachineConstants {
         }
     };
 
+    public static final EnergyUnit ENERGY_CELL_MAX_CAPACITY = new EnergyUnit(256000);
 }

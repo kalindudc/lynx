@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "lynx:generator",
+    "lynx:energy_cell",
     "lynx:uranium_ore"
   ]
 }

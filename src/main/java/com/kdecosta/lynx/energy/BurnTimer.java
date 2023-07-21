@@ -81,4 +81,8 @@ public class BurnTimer implements Serializable {
 
         return null;
     }
+
+    public void reset() {
+        this.timer = 0;
+    }
 }

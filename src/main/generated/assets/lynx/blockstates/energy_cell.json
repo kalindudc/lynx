@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "lynx:block/energy_cell"
+    },
+    "powered=true": {
+      "model": "lynx:block/energy_cell_powered"
+    }
+  }
+}

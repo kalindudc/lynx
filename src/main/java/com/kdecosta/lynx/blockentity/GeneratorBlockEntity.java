@@ -1,12 +1,11 @@
 package com.kdecosta.lynx.blockentity;
 
-import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxPropertyConstants;
+import com.kdecosta.lynx.blockentity.base.EnergyProducerBlockEntity;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
 import com.kdecosta.lynx.energy.BurnTimer;
-import com.kdecosta.lynx.energy.EnergyUnit;
 import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import com.kdecosta.lynx.screen.GeneratorScreenHandler;
@@ -20,23 +19,21 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-public class GeneratorBlockEntity extends LynxBlockEntity {
+public class GeneratorBlockEntity extends EnergyProducerBlockEntity {
+    public static final long MAX_EXTRACTION_RATE = 256;
 
-    private EnergyUnit energy;
     private BurnTimer burnTimer;
 
     public GeneratorBlockEntity(BlockPos pos, BlockState state) {
-        super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1);
+        super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1, MAX_EXTRACTION_RATE);
 
         this.burnTimer = new BurnTimer();
-        this.energy = new EnergyUnit();
     }
 
     public boolean isGenerating() {
@@ -44,37 +41,38 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
     }
 
     public boolean isFull() {
-        return this.energy.getEnergy() >= LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy();
+        return this.getEnergy().energy() >= LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.energy();
     }
 
-    public EnergyUnit getEnergy() {
-        return energy;
+    public void stopGenerating(World world, BlockPos pos, BlockState state) {
+        world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, false));
+        setInjectionRate(0);
+        this.burnTimer.reset();
+        markDirty();
     }
 
     public void tick(World world, BlockPos pos, BlockState state, LynxBlockEntity blockEntity) {
+        super.tick(world, pos, state, blockEntity);
 
         if (world.isClient) return;
+        verifyConsumers();
         sendDataToPlayers();
+        handleFuelAndEnergyGeneration(world, pos, state, blockEntity);
+    }
 
+    private void handleFuelAndEnergyGeneration(World world, BlockPos pos, BlockState state, LynxBlockEntity blockEntity) {
         if (isFull()) {
-            if (this.energy.getEnergy() > LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy())
-                this.energy.setEnergy(LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.getEnergy());
+            if (this.getEnergy().energy() > LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.energy())
+                this.getEnergy().setEnergy(LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.energy());
 
             if (state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
-                world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, false));
+                stopGenerating(world, pos, state);
             }
             return;
         }
 
         if (isGenerating()) {
             this.burnTimer.tick();
-            try {
-                this.energy.tick();
-            } catch (EnergyUnit.EnergyUnitTooLargeException e) {
-                throw new RuntimeException(e);
-            }
-            Lynx.LOGGER.info(String.format("%d", energy.getEnergy()));
-            Lynx.LOGGER.info(String.format("%d", energy.injectionRate()));
 
             if (!state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
                 world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, true));
@@ -87,8 +85,7 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
         if (!stack.isEmpty()) {
             loadFuel();
         } else if (state.get(LynxPropertyConstants.GENERATING_PROPERTY)) {
-            world.setBlockState(pos, state.with(LynxPropertyConstants.GENERATING_PROPERTY, false));
-            this.energy.setInjectionRate(0);
+            stopGenerating(world, pos, state);
         }
     }
 
@@ -101,10 +98,9 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
         if (!isFuel(stack.getItem())) return;
 
         this.burnTimer.setInSeconds(LynxMachineConstants.GENERATOR_BURN_RATE_IN_SECONDS.get(stack.getItem()));
-        this.energy.setInjectionRate(LynxMachineConstants.GENERATOR_ENERGY_RATES.get(stack.getItem()));
+        setInjectionRate(LynxMachineConstants.GENERATOR_ENERGY_RATES.get(stack.getItem()));
 
-        stack.setCount(stack.getCount() - 1);
-        setStack(0, stack.copy());
+        this.getStack(0).setCount(stack.getCount() - 1);
         markDirty();
     }
 
@@ -112,7 +108,6 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         try {
             nbt.putByteArray("burn_timer", BurnTimer.getBytes(burnTimer));
-            nbt.putByteArray("energy", EnergyUnit.getBytes(energy));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -121,11 +116,9 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
 
     @Override
     public void readNbt(NbtCompound nbt) {
-        Lynx.LOGGER.info("reading nbt");
         super.readNbt(nbt);
         try {
             burnTimer = BurnTimer.fromBytes(nbt.getByteArray("burn_timer"));
-            energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -134,11 +127,6 @@ public class GeneratorBlockEntity extends LynxBlockEntity {
     @Override
     public @Nullable ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
         return new GeneratorScreenHandler(syncId, playerInventory, this);
-    }
-
-    @Override
-    public void writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf) {
-        buf.writeBlockPos(pos);
     }
 
     @Override

@@ -74,7 +74,7 @@ public class LynxOreRegistry {
     public static LynxOreBlock createBlock(String name, String translation, LynxResources.IBlockResource resourceType,
                                            int minY, int maxY, int veinSize, Item lootDrop) {
         LynxOreBlock block = new LynxOreBlock(new Identifier(Lynx.MODID, name), translation, resourceType, minY, maxY, veinSize, lootDrop);
-        LynxBlockRegistry.createBlock(block);
+        LynxBlockRegistry.createBlock(block, false);
         BLOCKS.put(name, block);
         BLOCK_ITEMS.put(name, LynxBlockRegistry.BLOCK_ITEMS.get(name));
         return block;

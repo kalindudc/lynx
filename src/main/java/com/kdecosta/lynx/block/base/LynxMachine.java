@@ -14,6 +14,8 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.data.client.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -22,17 +24,35 @@ import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class LynxMachine extends LynxBlock implements IHasModelVariants {
     public static final DirectionProperty FACING = HorizontalFacingBlock.FACING;
 
-    public LynxMachine(Identifier id, String translation) {
-        super(id, translation, FabricBlockSettings.create().strength(4.0f).requiresTool());
-        setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
+    private final boolean facedBlock;
+
+    public LynxMachine(Identifier id, String translation, boolean facedBlock) {
+        super(id, translation, FabricBlockSettings.create().strength(4.0f).requiresTool().nonOpaque());
+
+        this.facedBlock = facedBlock;
+        if (facedBlock) setDefaultState(getDefaultState().with(FACING, Direction.NORTH));
+
         setPropertyDefaults();
     }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public float getAmbientOcclusionLightLevel(BlockState state, BlockView world, BlockPos pos) {
+        return 1.0f;
+    }
+
+    @Override
+    public boolean isTransparent(BlockState state, BlockView world, BlockPos pos) {
+        return true;
+    }
+
 
     public abstract void setPropertyDefaults();
 
@@ -40,10 +60,29 @@ public abstract class LynxMachine extends LynxBlock implements IHasModelVariants
 
     public abstract BooleanProperty getProperty();
 
+    @Nullable
+    @Override
+    public abstract BlockEntity createBlockEntity(BlockPos pos, BlockState state);
+
     @Override
     public void generateModelVariants(BlockStateModelGenerator blockStateModelGenerator) {
         String suffix = "_" + getPropertyId();
 
+        if (this.facedBlock) {
+            generateFacedVariants(blockStateModelGenerator, suffix);
+            return;
+        }
+
+        Identifier off = TexturedModel.CUBE_ALL.upload(this, blockStateModelGenerator.modelCollector);
+        Identifier on = blockStateModelGenerator.createSubModel(this, suffix, Models.CUBE_ALL, TextureMap::all);
+
+        blockStateModelGenerator.blockStateCollector.accept(
+                VariantsBlockStateSupplier.create(this)
+                        .coordinate(BlockStateModelGenerator.createBooleanModelMap(getProperty(), on, off))
+        );
+    }
+
+    private void generateFacedVariants(BlockStateModelGenerator blockStateModelGenerator, String suffix) {
         Identifier off = TexturedModel.ORIENTABLE.upload(this, blockStateModelGenerator.modelCollector);
         Identifier on_id = TextureMap.getSubId(this, "_front" + suffix);
         Identifier on = TexturedModel.ORIENTABLE.get(this).textures(textures -> textures.put(TextureKey.FRONT, on_id))
@@ -99,9 +138,36 @@ public abstract class LynxMachine extends LynxBlock implements IHasModelVariants
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if (world.isClient) return ActionResult.SUCCESS;
-        if (!(world.getBlockEntity(pos) instanceof LynxBlockEntity entity)) return ActionResult.SUCCESS;
+        NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, pos);
+        if (screenHandlerFactory == null) return ActionResult.SUCCESS;
 
+        player.openHandledScreen(screenHandlerFactory);
+
+        if (!(world.getBlockEntity(pos) instanceof LynxBlockEntity entity)) return ActionResult.SUCCESS;
         entity.registerPlayer((ServerPlayerEntity) player);
         return ActionResult.SUCCESS;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
+        if (state.getBlock().equals(newState.getBlock())) return;
+        if (!(world.getBlockEntity(pos) instanceof LynxBlockEntity entity)) return;
+
+        ItemScatterer.spawn(world, pos, entity);
+        world.updateComparators(pos, this);
+        super.onStateReplaced(state, world, pos, newState, moved);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean hasComparatorOutput(BlockState state) {
+        return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public int getComparatorOutput(BlockState state, World world, BlockPos pos) {
+        return ScreenHandler.calculateComparatorOutput(world.getBlockEntity(pos));
     }
 }
