@@ -3,8 +3,8 @@ package com.kdecosta.lynx.blockentity;
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxPropertyConstants;
-import com.kdecosta.lynx.blockentity.base.EnergyConsumerBlockEntity;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
+import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
 import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
 import com.kdecosta.lynx.screen.EnergyCellScreenHandler;
@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-public class EnergyCellBlockEntity extends EnergyConsumerBlockEntity {
+public class EnergyCellBlockEntity extends LynxMachineBlockEntity {
     public static final long MAX_RATE = 1024;
 
     public EnergyCellBlockEntity(BlockPos pos, BlockState state) {

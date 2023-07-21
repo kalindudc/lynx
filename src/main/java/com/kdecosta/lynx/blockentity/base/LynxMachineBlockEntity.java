@@ -14,25 +14,34 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
-
+public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
     private final long maxInjectionRate;
     private final long maxExtractionRate;
     private final long maxEnergy;
-    private final HashMap<EnergyProducerBlockEntity, Producer> producers;
+    private final HashMap<LynxMachineBlockEntity, Producer> producers;
+    private final HashMap<LynxMachineBlockEntity, BlockPos> consumers;
 
     private EnergyUnit energy;
 
-    public EnergyConsumerBlockEntity(BlockPos pos, BlockState state, BlockEntityType<? extends BlockEntity> blockEntityType, int itemStackSize,
-                                     long maxEnergy, long maxInjectionRate, long maxExtractionRate) {
+    public LynxMachineBlockEntity(BlockPos pos, BlockState state, BlockEntityType<? extends BlockEntity> blockEntityType, int itemStackSize,
+                                  long maxEnergy, long maxInjectionRate, long maxExtractionRate) {
         super(pos, state, blockEntityType, itemStackSize);
 
         this.producers = new HashMap<>();
+        this.consumers = new HashMap<>();
 
         this.maxInjectionRate = maxInjectionRate;
         this.maxExtractionRate = maxExtractionRate;
         this.maxEnergy = maxEnergy;
         this.energy = new EnergyUnit();
+    }
+
+    public HashMap<LynxMachineBlockEntity, Producer> getProducers() {
+        return producers;
+    }
+
+    public HashMap<LynxMachineBlockEntity, BlockPos> getConsumers() {
+        return consumers;
     }
 
     public void searchAndRegister(World world, BlockPos pos) {
@@ -44,9 +53,19 @@ public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
                     pos.getY() + cordOffset.getY(),
                     pos.getZ() + cordOffset.getZ()
             );
-            if (!(world.getBlockEntity(newPos) instanceof EnergyProducerBlockEntity producer)) continue;
-            registerProducer(producer);
+            if (!(world.getBlockEntity(newPos) instanceof LynxMachineBlockEntity entity)) continue;
+
+            if (entity.canConsumeEnergy()) registerConsumer(entity, entity.getPos());
+            if (entity.canProduceEnergy()) registerProducer(entity);
         }
+    }
+
+    public boolean canProduceEnergy() {
+        return this.maxExtractionRate > 0;
+    }
+
+    public boolean canConsumeEnergy() {
+        return this.maxInjectionRate > 0;
     }
 
     @Override
@@ -54,6 +73,8 @@ public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
         if (world.isClient) return;
 
         verifyProducers();
+        verifyConsumers();
+        distributeEnergy();
 
         if (this.energy.energy() >= maxEnergy) {
             this.energy.setEnergy(maxEnergy);
@@ -67,7 +88,72 @@ public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
         }
     }
 
-    public long inject(EnergyProducerBlockEntity producer, long rate) {
+    public void setInjectionRate(long injectionRate) {
+        this.energy.setInjectionRate(injectionRate);
+    }
+
+    public void setExtractionRate(long extractionRate) {
+        this.energy.setExtractionRate(extractionRate);
+    }
+
+    private void distributeEnergy() {
+        if (consumers.size() == 0) return;
+
+        long rate = getCurrentExtractionRatePerConsumer();
+        long extractRate = 0;
+
+        for (LynxMachineBlockEntity consumer : consumers.keySet()) {
+            if (consumer.isFull()) continue;
+            extractRate += consumer.inject(this, rate);
+        }
+        setExtractionRate(extractRate);
+    }
+
+    public void registerConsumer(LynxMachineBlockEntity consumer, BlockPos pos) {
+        if (consumers.containsKey(consumer)) return;
+
+        consumers.put(consumer, pos);
+        if (this.canProduceEnergy()) consumer.registerProducer(this);
+    }
+
+    public void deregisterConsumer(LynxMachineBlockEntity consumer) {
+        consumers.remove(consumer);
+    }
+
+    public void verifyConsumers() {
+        if (world == null) return;
+
+        List<LynxMachineBlockEntity> toRemove = new ArrayList<>();
+        consumers.forEach((consumer, pos) -> {
+            if (world.getBlockEntity(pos) == null) toRemove.add(consumer);
+        });
+
+        long extractionRate = this.energy.extractionRate();
+        for (LynxMachineBlockEntity consumer : toRemove) {
+            extractionRate -= getCurrentExtractionRatePerConsumer();
+            consumers.remove(consumer);
+        }
+        this.energy.setExtractionRate(extractionRate);
+    }
+
+    public long getCurrentExtractionRatePerConsumer() {
+        int validConsumers = 0;
+        for (LynxMachineBlockEntity consumer : consumers.keySet()) {
+            if (!consumer.isFull()) {
+                validConsumers += 1;
+            }
+        }
+        if (validConsumers == 0) return 0;
+
+        return Math.min(maxExtractionRate, energy.energy()) / validConsumers;
+    }
+
+    public long getExtractionRate() {
+        if (consumers.size() == 0) return 0;
+        return Math.min(maxExtractionRate, energy.energy());
+    }
+
+    public long inject(LynxMachineBlockEntity producer, long rate) {
         if (energy.energy() >= maxEnergy) return 0;
 
         long currRateByProducer = 0;
@@ -97,21 +183,21 @@ public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
         markDirty();
     }
 
-    public void registerProducer(EnergyProducerBlockEntity producer) {
+    public void registerProducer(LynxMachineBlockEntity producer) {
         if (!producers.containsKey(producer)) {
             producers.put(producer, new Producer(producer, producer.getPos(), 0));
-            producer.registerConsumer(this, this.getPos());
+            if (this.canConsumeEnergy()) producer.registerConsumer(this, this.getPos());
         }
     }
 
-    public void deregisterProducer(EnergyProducerBlockEntity producer) {
+    public void deregisterProducer(LynxMachineBlockEntity producer) {
         producers.remove(producer);
     }
 
     public void verifyProducers() {
         if (world == null) return;
 
-        List<EnergyProducerBlockEntity> toRemove = new ArrayList<>();
+        List<LynxMachineBlockEntity> toRemove = new ArrayList<>();
         producers.forEach((producer, producerData) -> {
             if (world.getBlockEntity(producerData.getPos()) == null) toRemove.add(producer);
         });
@@ -157,21 +243,21 @@ public abstract class EnergyConsumerBlockEntity extends LynxBlockEntity {
     }
 
     private static class Producer {
-        private EnergyProducerBlockEntity producer;
+        private LynxMachineBlockEntity producer;
         private BlockPos pos;
         private long injectionRate;
 
-        public Producer(EnergyProducerBlockEntity producer, BlockPos pos, long injectionRate) {
+        public Producer(LynxMachineBlockEntity producer, BlockPos pos, long injectionRate) {
             this.injectionRate = injectionRate;
             this.producer = producer;
             this.pos = pos;
         }
 
-        public EnergyProducerBlockEntity getProducer() {
+        public LynxMachineBlockEntity getProducer() {
             return producer;
         }
 
-        public void setProducer(EnergyProducerBlockEntity producer) {
+        public void setProducer(LynxMachineBlockEntity producer) {
             this.producer = producer;
         }
 

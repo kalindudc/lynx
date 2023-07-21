@@ -3,8 +3,8 @@ package com.kdecosta.lynx.blockentity;
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxPropertyConstants;
-import com.kdecosta.lynx.blockentity.base.EnergyProducerBlockEntity;
 import com.kdecosta.lynx.blockentity.base.LynxBlockEntity;
+import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
 import com.kdecosta.lynx.energy.BurnTimer;
 import com.kdecosta.lynx.registries.LynxBlockEntityRegistry;
 import com.kdecosta.lynx.registries.LynxBlockRegistry;
@@ -25,13 +25,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 
-public class GeneratorBlockEntity extends EnergyProducerBlockEntity {
+public class GeneratorBlockEntity extends LynxMachineBlockEntity {
     public static final long MAX_EXTRACTION_RATE = 256;
 
     private BurnTimer burnTimer;
 
     public GeneratorBlockEntity(BlockPos pos, BlockState state) {
-        super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1, MAX_EXTRACTION_RATE);
+        super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.GENERATOR), 1,
+                LynxMachineConstants.GENERATOR_ENERGY_CAPACITY.energy(), 0, MAX_EXTRACTION_RATE);
 
         this.burnTimer = new BurnTimer();
     }
