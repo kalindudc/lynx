@@ -10,4 +10,7 @@ public class LynxScreenConstants {
     public static final int[] ENERGY_CELL_TEXTURE_SLOT_CORDS = new int[]{36, 35};
     public static final Identifier ENERGY_CELL_TEXTURE = new Identifier(Lynx.MODID, "textures/gui/container/energy_cell.png");
 
+    public static final Identifier MACHINE_SETTINGS_BUTTON_TEXTURE = new Identifier(Lynx.MODID, "textures/gui/machine_settings_button.png");
+    public static final Identifier MACHINE_SETTINGS_TEXTURE = new Identifier(Lynx.MODID, "textures/gui/machine_settings.png");
+
 }

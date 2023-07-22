@@ -2,6 +2,7 @@ package com.kdecosta.lynx.blockentity.base;
 
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.shared.dataunit.EnergyUnit;
+import com.kdecosta.lynx.util.DirectionalUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -16,16 +17,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
-    private final HashMap<LynxMachineBlockEntity, Producer> producers;
-    private final HashMap<LynxMachineBlockEntity, BlockPos> consumers;
+    private final HashMap<Direction, Boolean> injectionSides;
+    private final HashMap<Direction, Boolean> extractionSides;
+    private final HashMap<LynxMachineBlockEntity, Direction> machineToDirection;
 
+    private HashMap<LynxMachineBlockEntity, Producer> producers;
+    private HashMap<LynxMachineBlockEntity, BlockPos> consumers;
     private EnergyUnit energy;
     private long maxInjectionRate;
     private long maxExtractionRate;
     private long maxEnergy;
     private boolean triggerSearch;
-    private HashMap<Direction, Boolean> injectionSides;
-    private HashMap<Direction, Boolean> extractionSides;
 
     public LynxMachineBlockEntity(BlockPos pos, BlockState state, BlockEntityType<? extends BlockEntity> blockEntityType, int itemStackSize,
                                   long maxEnergy, long maxInjectionRate, long maxExtractionRate) {
@@ -41,6 +43,7 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         this.triggerSearch = false;
         this.injectionSides = new HashMap<>();
         this.extractionSides = new HashMap<>();
+        this.machineToDirection = new HashMap<>();
         setupInjectionAndExtractionSides();
     }
 
@@ -72,10 +75,10 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
             BlockPos newPos = pos.add(direction.getVector());
             if (!(world.getBlockEntity(newPos) instanceof LynxMachineBlockEntity entity)) continue;
 
-            if (this.extractionSides.get(direction) && entity.canConsumeEnergy())
-                registerConsumer(entity, entity.getPos());
-            if (this.injectionSides.get(direction) && entity.canProduceEnergy())
-                registerProducer(entity);
+            if (entity.canConsumeEnergy())
+                registerConsumer(entity, direction);
+            if (entity.canProduceEnergy())
+                registerProducer(entity, direction);
         }
     }
 
@@ -128,16 +131,19 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
 
         for (LynxMachineBlockEntity consumer : consumers.keySet()) {
             if (consumer.isFull()) continue;
+            if (!canExtract(this.machineToDirection.get(consumer))) continue;
+            if (!consumer.canInject(DirectionalUtil.getOppositeDirection(machineToDirection.get(consumer)))) continue;
             extractRate += consumer.inject(this, rate);
         }
         setExtractionRate(extractRate);
     }
 
-    public void registerConsumer(LynxMachineBlockEntity consumer, BlockPos pos) {
+    public void registerConsumer(LynxMachineBlockEntity consumer, Direction direction) {
         if (consumers.containsKey(consumer)) return;
 
-        consumers.put(consumer, pos);
-        if (this.canProduceEnergy()) consumer.registerProducer(this);
+        consumers.put(consumer, consumer.getPos());
+        machineToDirection.put(consumer, direction);
+        if (this.canProduceEnergy()) consumer.registerProducer(this, DirectionalUtil.getOppositeDirection(direction));
     }
 
     public void deregisterConsumer(LynxMachineBlockEntity consumer) {
@@ -151,30 +157,36 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         consumers.forEach((consumer, pos) -> {
             if (world.getBlockEntity(pos) == null) toRemove.add(consumer);
         });
-        toRemove.forEach(consumers::remove);
+        toRemove.forEach(key -> {
+            consumers.remove(key);
+            machineToDirection.remove(key);
+        });
 
         if (consumers.size() == 0) {
             setExtractionRate(0);
-            //return;
         }
-//        long extractionRate = getExtractionRate();
-//        long extractionRatePerConsumer = getCurrentExtractionRatePerConsumer();
-//        consumers.forEach((consumer, pos) -> {
-//            consumer.inject(this, extractionRatePerConsumer);
-//        });
-//        setExtractionRate(extractionRate);
     }
 
     public long getCurrentExtractionRatePerConsumer() {
         int validConsumers = 0;
         for (LynxMachineBlockEntity consumer : consumers.keySet()) {
-            if (!consumer.isFull()) {
+            if (!consumer.isFull() &&
+                    consumer.canInject(DirectionalUtil.getOppositeDirection(machineToDirection.get(consumer))) &&
+                    canExtract(machineToDirection.get(consumer))) {
                 validConsumers += 1;
             }
         }
         if (validConsumers == 0) return 0;
 
         return Math.min(maxExtractionRate, energy.energy()) / validConsumers;
+    }
+
+    private boolean canExtract(Direction direction) {
+        return this.extractionSides.get(direction);
+    }
+
+    private boolean canInject(Direction direction) {
+        return this.injectionSides.get(direction);
     }
 
     public long getExtractionRate() {
@@ -222,10 +234,12 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         markDirty();
     }
 
-    public void registerProducer(LynxMachineBlockEntity producer) {
+    public void registerProducer(LynxMachineBlockEntity producer, Direction direction) {
         if (!producers.containsKey(producer)) {
             producers.put(producer, new Producer(producer, producer.getPos(), 0));
-            if (this.canConsumeEnergy()) producer.registerConsumer(this, this.getPos());
+            machineToDirection.put(producer, direction);
+            if (this.canConsumeEnergy())
+                producer.registerConsumer(this, DirectionalUtil.getOppositeDirection(direction));
         }
     }
 
@@ -241,11 +255,13 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
             if (world.getBlockEntity(producerData.getPos()) == null) toRemove.add(producer);
         });
 
-        toRemove.forEach(producer -> {
-            long rate = energy.injectionRate() - producers.get(producer).getInjectionRate();
-            energy.setInjectionRate(rate);
+        long rate = energy.injectionRate();
+        for (LynxMachineBlockEntity producer : toRemove) {
+            rate -= producers.get(producer).getInjectionRate();
             producers.remove(producer);
-        });
+            machineToDirection.remove(producer);
+        }
+        energy.setInjectionRate(rate);
         markDirty();
     }
 
@@ -256,10 +272,7 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
             nbt.putLong("max_energy", maxEnergy);
             nbt.putLong("max_extraction_rate", maxExtractionRate);
             nbt.putLong("max_injection_rate", maxInjectionRate);
-            for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
-                nbt.putBoolean(String.format("injection_side_%s", direction.getName()), this.injectionSides.get(direction));
-                nbt.putBoolean(String.format("extraction_side_%s", direction.getName()), this.extractionSides.get(direction));
-            }
+            storeSidesDataToNbt(nbt);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -277,13 +290,30 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
             energy.setExtractionRate(0);
             energy.setInjectionRate(0);
             triggerSearch = true;
-            for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
-                this.injectionSides.put(direction, nbt.getBoolean(String.format("injection_side_%s", direction.getName())));
-                this.extractionSides.put(direction, nbt.getBoolean(String.format("extraction_side_%s", direction.getName())));
-            }
+            readSidesDataFromNbt(nbt);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void storeSidesDataToNbt(NbtCompound nbt) {
+        for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
+            nbt.putBoolean(String.format("injection_side_%s", direction.getName()), this.injectionSides.get(direction));
+            nbt.putBoolean(String.format("extraction_side_%s", direction.getName()), this.extractionSides.get(direction));
+        }
+    }
+
+    public void readSidesDataFromNbt(NbtCompound nbt) {
+        for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
+            this.injectionSides.put(direction, nbt.getBoolean(String.format("injection_side_%s", direction.getName())));
+            this.extractionSides.put(direction, nbt.getBoolean(String.format("extraction_side_%s", direction.getName())));
+        }
+    }
+
+    public void updateSides(NbtCompound nbt) {
+        readSidesDataFromNbt(nbt);
+        setExtractionRate(0);
+        setInjectionRate(0);
     }
 
     public EnergyUnit getEnergy() {

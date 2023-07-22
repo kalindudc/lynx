@@ -50,7 +50,5 @@ public class Lynx implements ModInitializer {
         });
 
         LynxPacketHandler.registerPacketHandlers();
-
-
     }
 }

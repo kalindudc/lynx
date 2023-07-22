@@ -21,6 +21,10 @@ public abstract class LynxScreen extends HandledScreen<LynxScreenHandler> {
         pos = handler.getBlockPos();
     }
 
+    public BlockPos getPos() {
+        return pos;
+    }
+
     public abstract Identifier getTexture();
 
     @Override
