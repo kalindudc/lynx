@@ -75,14 +75,11 @@ public class EnergyCellScreen extends LynxScreen {
         this.settingsWidget.update();
         if (this.settingsWidget.shouldSendPacketUpdate()) {
             sendUpdateSidesPacket();
-            this.settingsWidget.setSendPacketUpdate(false);
         }
     }
 
     private void sendUpdateSidesPacket() {
-        this.settingsWidget.getFaceTypes().forEach((dir, type) -> {
-            this.faceTypes.put(dir, type);
-        });
+        this.faceTypes.putAll(this.settingsWidget.getFaceTypes());
 
         NbtCompound nbt = new NbtCompound();
         nbt.putInt("x", getPos().getX());
@@ -126,12 +123,16 @@ public class EnergyCellScreen extends LynxScreen {
         NbtCompound nbt = buf.readNbt();
 
         if (nbt == null) return;
+        boolean serverUpdate = nbt.getBoolean("update_packet_success");
+        if (serverUpdate) {
+            this.settingsWidget.setSendPacketUpdate(false);
+            return;
+        }
 
         try {
             energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
             readSidesDataFromNbt(nbt);
-            if (!this.settingsWidget.shouldSendPacketUpdate() || !this.settingsWidget.isOpen())
-                this.settingsWidget.updateFaceTypes(this.faceTypes);
+            this.settingsWidget.updateFaceTypes(this.faceTypes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

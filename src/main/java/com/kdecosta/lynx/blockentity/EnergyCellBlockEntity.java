@@ -26,6 +26,7 @@ public class EnergyCellBlockEntity extends LynxMachineBlockEntity {
     public EnergyCellBlockEntity(BlockPos pos, BlockState state) {
         super(pos, state, LynxBlockEntityRegistry.BLOCK_ENTITY_TYPES.get(LynxBlockRegistry.ENERGY_CELL), 1,
                 LynxMachineConstants.ENERGY_CELL_MAX_CAPACITY.energy(), MAX_RATE, MAX_RATE);
+        setAllSidesInjectable();
     }
 
     @Override
@@ -54,6 +55,20 @@ public class EnergyCellBlockEntity extends LynxMachineBlockEntity {
 
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeNbt(nbt);
+
+        getPlayerRegistry().forEach((key, player) -> {
+            ServerPlayNetworking.send(player, LynxNetworkingConstants.ENERGY_CELL_PACKET_ID, buf);
+        });
+    }
+
+    @Override
+    public void updateSides(NbtCompound nbt) {
+        super.updateSides(nbt);
+
+        NbtCompound _nbt = new NbtCompound();
+        _nbt.putBoolean("update_packet_success", true);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeNbt(_nbt);
 
         getPlayerRegistry().forEach((key, player) -> {
             ServerPlayNetworking.send(player, LynxNetworkingConstants.ENERGY_CELL_PACKET_ID, buf);

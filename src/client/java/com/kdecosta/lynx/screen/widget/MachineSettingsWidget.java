@@ -253,6 +253,8 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
     }
 
     public void updateFaceTypes(HashMap<Direction, LynxMachineBlockEntity.FaceType> faceTypes) {
+        if (shouldSendPacketUpdate()) return;
+
         for (Direction dir : faceTypes.keySet()) {
             this.faceTypes.put(dir, faceTypes.get(dir));
             updateSideButton(dir);

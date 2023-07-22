@@ -38,7 +38,6 @@ public abstract class LynxMachineBlockEntity extends LynxBlockEntity {
         this.faceTypes = new HashMap<>();
         this.neighbours = new HashMap<>();
         this.injectionRates = new HashMap<>();
-
         setupFaceTypes();
     }
 
