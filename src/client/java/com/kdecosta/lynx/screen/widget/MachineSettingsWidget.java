@@ -3,6 +3,7 @@ package com.kdecosta.lynx.screen.widget;
 import com.kdecosta.lynx.Lynx;
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxScreenConstants;
+import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -28,7 +29,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
     private int y;
     private boolean isOpen;
     private MinecraftClient client;
-    private HashMap<Direction, SideType> sides;
+    private HashMap<Direction, LynxMachineBlockEntity.FaceType> faceTypes;
     private HashMap<Direction, TexturedButtonWidget> sideButtons;
     private HashMap<Direction, TexturedButtonWidget> noneSideButtons;
     private HashMap<Direction, TexturedButtonWidget> extractionSideButtons;
@@ -39,7 +40,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         this.isOpen = false;
         this.x = x;
         this.y = y;
-        this.sides = new HashMap<>();
+        this.faceTypes = new HashMap<>();
         this.sideButtons = new HashMap<>();
         this.noneSideButtons = new HashMap<>();
         this.extractionSideButtons = new HashMap<>();
@@ -48,12 +49,16 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         this.sendPacketUpdate = false;
     }
 
-    public void init() {
-        registerButtons(SideType.NONE, 90);
-        registerButtons(SideType.EXTRACTION, 112);
-        registerButtons(SideType.INJECTION, 134);
+    public void init(int x, int y, MinecraftClient client) {
+        this.x = x;
+        this.y = y;
+        this.client = client;
+
+        registerButtons(LynxMachineBlockEntity.FaceType.NONE, 90);
+        registerButtons(LynxMachineBlockEntity.FaceType.EXTRACTION, 112);
+        registerButtons(LynxMachineBlockEntity.FaceType.INJECTION, 134);
         for (Direction dir : LynxMachineConstants.SEARCH_DIRECTIONS) {
-            this.sides.put(dir, SideType.NONE);
+            this.faceTypes.put(dir, LynxMachineBlockEntity.FaceType.NONE);
             this.sideButtons.put(dir, noneSideButtons.get(dir));
         }
     }
@@ -62,7 +67,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         this.client = client;
     }
 
-    private void registerButtons(SideType type, int u) {
+    private void registerButtons(LynxMachineBlockEntity.FaceType type, int u) {
         int startX = this.x + (WIDTH / 2) - (BUTTON_SIZE / 2) - 4 - BUTTON_SIZE;
         int startY = this.y + 9 + 15;
 
@@ -110,7 +115,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         up.setTooltip(Tooltip.of(Text.of("Up")));
         down.setTooltip(Tooltip.of(Text.of("Down")));
 
-        if (type == SideType.NONE) {
+        if (type == LynxMachineBlockEntity.FaceType.NONE) {
             noneSideButtons.put(Direction.NORTH, north);
             noneSideButtons.put(Direction.SOUTH, south);
             noneSideButtons.put(Direction.EAST, east);
@@ -118,7 +123,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
             noneSideButtons.put(Direction.UP, up);
             noneSideButtons.put(Direction.DOWN, down);
         }
-        if (type == SideType.INJECTION) {
+        if (type == LynxMachineBlockEntity.FaceType.INJECTION) {
             injectionSideButtons.put(Direction.NORTH, north);
             injectionSideButtons.put(Direction.SOUTH, south);
             injectionSideButtons.put(Direction.EAST, east);
@@ -126,7 +131,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
             injectionSideButtons.put(Direction.UP, up);
             injectionSideButtons.put(Direction.DOWN, down);
         }
-        if (type == SideType.EXTRACTION) {
+        if (type == LynxMachineBlockEntity.FaceType.EXTRACTION) {
             extractionSideButtons.put(Direction.NORTH, north);
             extractionSideButtons.put(Direction.SOUTH, south);
             extractionSideButtons.put(Direction.EAST, east);
@@ -136,18 +141,17 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         }
     }
 
-    public SideType rotateSideType(SideType type) {
-        if (type == SideType.EXTRACTION) return SideType.INJECTION;
-        if (type == SideType.INJECTION) return SideType.NONE;
-        return SideType.EXTRACTION;
+    public LynxMachineBlockEntity.FaceType rotateFaceType(LynxMachineBlockEntity.FaceType type) {
+        if (type == LynxMachineBlockEntity.FaceType.EXTRACTION) return LynxMachineBlockEntity.FaceType.INJECTION;
+        if (type == LynxMachineBlockEntity.FaceType.INJECTION) return LynxMachineBlockEntity.FaceType.NONE;
+        return LynxMachineBlockEntity.FaceType.EXTRACTION;
     }
 
     public void handleSideButtonPress(Direction direction) {
-        Lynx.LOGGER.info(direction.asString());
-        SideType newType = rotateSideType(this.sides.get(direction));
-        this.sides.put(direction, newType);
-        updateSideButton(direction);
         this.sendPacketUpdate = true;
+        LynxMachineBlockEntity.FaceType newType = rotateFaceType(this.faceTypes.get(direction));
+        this.faceTypes.put(direction, newType);
+        updateSideButton(direction);
     }
 
     public void toggleOpen() {
@@ -248,25 +252,19 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         return y;
     }
 
-    public void updateSides(HashMap<Direction, Boolean> injectionSides, HashMap<Direction, Boolean> extractionSides) {
-        for (Direction dir : LynxMachineConstants.SEARCH_DIRECTIONS) {
-            if (injectionSides.get(dir)) {
-                sides.put(dir, SideType.INJECTION);
-            } else if (extractionSides.get(dir)) {
-                sides.put(dir, SideType.EXTRACTION);
-            } else {
-                sides.put(dir, SideType.NONE);
-            }
+    public void updateFaceTypes(HashMap<Direction, LynxMachineBlockEntity.FaceType> faceTypes) {
+        for (Direction dir : faceTypes.keySet()) {
+            this.faceTypes.put(dir, faceTypes.get(dir));
             updateSideButton(dir);
         }
     }
 
     public void updateSideButton(Direction direction) {
-        SideType type = this.sides.get(direction);
+        LynxMachineBlockEntity.FaceType type = this.faceTypes.get(direction);
 
-        if (type == SideType.INJECTION) {
+        if (type == LynxMachineBlockEntity.FaceType.INJECTION) {
             this.sideButtons.put(direction, this.injectionSideButtons.get(direction));
-        } else if (type == SideType.EXTRACTION) {
+        } else if (type == LynxMachineBlockEntity.FaceType.EXTRACTION) {
             this.sideButtons.put(direction, this.extractionSideButtons.get(direction));
         } else {
             this.sideButtons.put(direction, this.noneSideButtons.get(direction));
@@ -281,19 +279,7 @@ public class MachineSettingsWidget implements Drawable, Element, Selectable {
         this.sendPacketUpdate = sendPacketUpdate;
     }
 
-    public HashMap<Direction, SideType> getSides() {
-        return sides;
-    }
-
-    public enum SideType {
-        NONE("none"),
-        INJECTION("injection"),
-        EXTRACTION("extraction");
-
-        final String type;
-
-        SideType(String type) {
-            this.type = type;
-        }
+    public HashMap<Direction, LynxMachineBlockEntity.FaceType> getFaceTypes() {
+        return faceTypes;
     }
 }

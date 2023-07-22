@@ -3,6 +3,7 @@ package com.kdecosta.lynx.screen;
 import com.kdecosta.lynx.api.LynxMachineConstants;
 import com.kdecosta.lynx.api.LynxNetworkingConstants;
 import com.kdecosta.lynx.api.LynxScreenConstants;
+import com.kdecosta.lynx.blockentity.base.LynxMachineBlockEntity;
 import com.kdecosta.lynx.screen.base.LynxScreen;
 import com.kdecosta.lynx.screen.base.LynxScreenHandler;
 import com.kdecosta.lynx.screen.widget.MachineSettingsWidget;
@@ -21,8 +22,7 @@ import net.minecraft.util.math.Direction;
 import java.util.HashMap;
 
 public class EnergyCellScreen extends LynxScreen {
-    private HashMap<Direction, Boolean> injectionSides;
-    private HashMap<Direction, Boolean> extractionSides;
+    private final HashMap<Direction, LynxMachineBlockEntity.FaceType> faceTypes;
 
     private EnergyUnit energy;
     private MachineSettingsWidget settingsWidget;
@@ -30,18 +30,14 @@ public class EnergyCellScreen extends LynxScreen {
     public EnergyCellScreen(LynxScreenHandler handler, PlayerInventory inventory, Text title) {
         super(handler, inventory, title);
         this.energy = new EnergyUnit();
-        this.injectionSides = new HashMap<>();
-        this.extractionSides = new HashMap<>();
+        this.faceTypes = new HashMap<>();
         this.settingsWidget = new MachineSettingsWidget(0, 0);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.settingsWidget.setX(this.x + backgroundWidth + 2);
-        this.settingsWidget.setY(this.y + 20);
-        this.settingsWidget.setClient(this.client);
-        this.settingsWidget.init();
+        this.settingsWidget.init(this.x + backgroundWidth + 2, this.y + 20, this.client);
         this.addDrawableChild(new TexturedButtonWidget(
                         this.settingsWidget.getX(),
                         this.settingsWidget.getY() - 20,
@@ -52,7 +48,6 @@ public class EnergyCellScreen extends LynxScreen {
                         19,
                         LynxScreenConstants.MACHINE_SETTINGS_BUTTON_TEXTURE, button -> {
                     this.settingsWidget.toggleOpen();
-                    //button.setPosition(this.settingsWidget.getX(), this.settingsWidget.getY() - 20);
                 })
         );
         this.addSelectableChild(this.settingsWidget);
@@ -85,17 +80,8 @@ public class EnergyCellScreen extends LynxScreen {
     }
 
     private void sendUpdateSidesPacket() {
-        this.settingsWidget.getSides().forEach((dir, type) -> {
-            if (type == MachineSettingsWidget.SideType.INJECTION) {
-                this.injectionSides.put(dir, true);
-                this.extractionSides.put(dir, false);
-            } else if (type == MachineSettingsWidget.SideType.EXTRACTION) {
-                this.injectionSides.put(dir, false);
-                this.extractionSides.put(dir, true);
-            } else {
-                this.injectionSides.put(dir, false);
-                this.extractionSides.put(dir, false);
-            }
+        this.settingsWidget.getFaceTypes().forEach((dir, type) -> {
+            this.faceTypes.put(dir, type);
         });
 
         NbtCompound nbt = new NbtCompound();
@@ -144,24 +130,22 @@ public class EnergyCellScreen extends LynxScreen {
         try {
             energy = EnergyUnit.fromBytes(nbt.getByteArray("energy"));
             readSidesDataFromNbt(nbt);
-            if (!this.settingsWidget.shouldSendPacketUpdate())
-                this.settingsWidget.updateSides(this.injectionSides, this.extractionSides);
+            if (!this.settingsWidget.shouldSendPacketUpdate() || !this.settingsWidget.isOpen())
+                this.settingsWidget.updateFaceTypes(this.faceTypes);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private void storeSidesDataToNbt(NbtCompound nbt) {
-        for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
-            nbt.putBoolean(String.format("injection_side_%s", direction.getName()), this.injectionSides.get(direction));
-            nbt.putBoolean(String.format("extraction_side_%s", direction.getName()), this.extractionSides.get(direction));
+        for (Direction direction : this.faceTypes.keySet()) {
+            nbt.putString(String.format("face_type_%s", direction.getName()), this.faceTypes.get(direction).toString());
         }
     }
 
-    private void readSidesDataFromNbt(NbtCompound nbt) {
+    public void readSidesDataFromNbt(NbtCompound nbt) {
         for (Direction direction : LynxMachineConstants.SEARCH_DIRECTIONS) {
-            this.injectionSides.put(direction, nbt.getBoolean(String.format("injection_side_%s", direction.getName())));
-            this.extractionSides.put(direction, nbt.getBoolean(String.format("extraction_side_%s", direction.getName())));
+            this.faceTypes.put(direction, LynxMachineBlockEntity.FaceType.fromString(nbt.getString(String.format("face_type_%s", direction.getName()))));
         }
     }
 }

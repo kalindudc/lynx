@@ -20,12 +20,11 @@ public class LynxBlockLootTableProvider extends FabricBlockLootTableProvider {
             Block block = entry.getValue();
             Item item = LynxBlockRegistry.BLOCK_ITEMS.get(entry.getKey());
 
-            if (block instanceof IHasLootDrop) {
-                item = ((IHasLootDrop) block).getDrop();
+            if (block instanceof IHasLootDrop lootBlock) {
+                item = lootBlock.getDrop();
             }
 
             addDrop(block, item);
-
         }
     }
 }
